@@ -2,37 +2,34 @@ package pl.wieczorekp.configmodule;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Vector;
 
 import static java.io.File.separatorChar;
 
 public abstract class ConfigValidator {
     private boolean status;
-    protected final IConfigurableJavaPlugin _rootInstance;
+    protected IConfigurableJavaPlugin _rootInstance;
     protected FileConfiguration _config;
     protected File dataFolder;
     protected String prefix;
-    protected Vector<ConfigEntry> configEntryList; //ToDo: hash mapa
+    protected ConfigEntryList configEntryList; //ToDo: hash mapa
 
     ///////////////////////////////////////////////////////////////////////////
     // public methods
     ///////////////////////////////////////////////////////////////////////////
-    protected ConfigValidator(String packageName, FileConfiguration cfg, File dataFolder, ConfigEntry[] paths) {
-        this._rootInstance = IConfigurableJavaPlugin.getInstance(packageName);
-        this._config = cfg;
+    protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, FileConfiguration _config, File dataFolder, String prefix, ConfigEntryList paths) {
+        this._rootInstance = _rootInstance;
+        this._config = _config;
         this.dataFolder = dataFolder;
-        this.configEntryList = new Vector<>(Arrays.asList(paths));
-        this.status = true;
-        this.prefix = _rootInstance.getName() + " ";
+        this.prefix = prefix;
+        this.configEntryList = paths;
     }
 
-    protected ConfigValidator(FileConfiguration cfg, File dataFolder, ConfigEntry[] paths) {
-        this("pl.wieczorekp", cfg, dataFolder, paths);
+    protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, ConfigEntryList paths) {
+        this(_rootInstance, _rootInstance.getConfig(), _rootInstance.getDataFolder(), _rootInstance.getName() + " ", paths);
     }
-
 
     protected abstract boolean additionalBeforeValidation();
     protected abstract boolean additionalAfterValidation();
@@ -44,6 +41,22 @@ public abstract class ConfigValidator {
         if (!additionalBeforeValidation())
             status = false;
 
+        if (configEntryList == null)
+            return true;
+
+        YamlConfiguration yml = null;
+        String prevPath = null;
+
+        for (ConfigEntry<Boolean> entry : configEntryList.getBooleans())
+            validateEntry(entry, prevPath, yml);
+
+        for (ConfigEntry<Integer> entry : configEntryList.getIntegers())
+            validateEntry(entry, prevPath, yml);
+
+        for (ConfigEntry<String> entry : configEntryList.getStrings())
+            validateEntry(entry, prevPath, yml);
+
+        /*
         boolean configExists = false;
         if (!new File(dataFolder, "config.yml").exists()) {
             if (_rootInstance.getResource("config.yml") != null) {
@@ -86,7 +99,7 @@ public abstract class ConfigValidator {
                 continue;
             }
 
-            target.setContent(_config.get(target.getPath()));
+            target.setValue(_config.get(target.getPath()));
         }
 
         for (ConfigEntry ce : configEntryList) {
@@ -95,17 +108,42 @@ public abstract class ConfigValidator {
                 printError(ce.getName() + (ce.is(Language.class) ? " in one of the languages" : "" ), ErrorCode.WRONG_VALUE);
             }
         }
-
+        */
         if (!additionalAfterValidation())
             status = false;
 
         return status;
+
+    }
+
+    private <T> void validateEntry(ConfigEntry<T> entry, String prevPath, YamlConfiguration yml) {
+        String filePath = getFilePathFromConfig(entry.getPath());
+        File f = createFileFromPath(_rootInstance, filePath);
+
+        // ToDo: usunac te wiadomosci, bo useless ogolnie
+        if (!f.exists()) {
+            printError(filePath, ErrorCode.NOT_EXISTED);
+
+            _rootInstance.saveResource(filePath, false);
+            if (!f.exists()) {
+                printError(filePath, ErrorCode.FILE_CREATION_ERROR);
+                status = false;
+            }
+        }
+
+        System.out.println(f.getAbsolutePath());
+        if (!f.getAbsolutePath().equals(prevPath))
+            yml = YamlConfiguration.loadConfiguration(f);
+
+        entry.is(yml.get(entry.getName()));
+
+        prevPath = f.getAbsolutePath();
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // protected methods
     ///////////////////////////////////////////////////////////////////////////
-    protected void addPath(ConfigEntry configEntry) {
+    protected <T> void addPath(ConfigEntry<T> configEntry) {
         configEntryList.add(configEntry);
     }
 
@@ -134,9 +172,9 @@ public abstract class ConfigValidator {
                 break;
         }
 
-        String message = "§4[" + this.prefix + " ERROR " + code.getError() + "] §c" + sb.toString();
+        String message = "§4[" + this.prefix + "ERROR " + code.getError() + "] §c" + sb.toString();
         if (code.getError() > 0)
-            message = "§9[" + this.prefix + " INFO " + code.getError() + "] §b" + sb.toString();
+            message = "§9[" + this.prefix + "INFO " + code.getError() + "] §b" + sb.toString();
 
         Bukkit.getConsoleSender().sendMessage(message);
     }
@@ -144,36 +182,23 @@ public abstract class ConfigValidator {
 
     /**
      *
-     * @param path
-     * @return converted path to yaml file.
+     * @param path Path received from ConfigEntry.
+     * @return Path to yml file.
      */
     public static String getFilePathFromConfig(String path) {
+        System.out.println("getFilePathFromConfig input: " + path);
         if (path == null)
             throw new NullPointerException("File path cannot be null!");
 
-        char[] newPath = path.replace('$', separatorChar).toCharArray();
+        if (!path.contains("/"))
+            return path;
 
-        if (!path.contains("$"))
-            return "config.yml";
+        int lastIndex = path.replace('/', separatorChar).trim().lastIndexOf(separatorChar);
+        return path.substring(0, lastIndex == -1 ? 0 : lastIndex);
+    }
 
-        return String.valueOf(newPath);
-
-        /*int wp;
-        char[] wpath;
-        if ((wp = path.indexOf("$")) == -1) {
-            return "config.yml";
-        } else {
-            wpath = path.substring(0, wp).toCharArray();
-        }
-
-        for (int i = 0; i < wpath.length; i++) {
-            if (wpath[i] == '.')
-                wpath[i] = File.separatorChar;
-        }
-
-
-
-        return new String(wpath) + ".yml";*/
+    public static File createFileFromPath(IConfigurableJavaPlugin instance, String path) {
+        return new File(instance.getDataFolder() + String.valueOf(separatorChar) + path);
     }
 
     protected enum ErrorCode {

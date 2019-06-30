@@ -5,30 +5,39 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 
 public class ConfigEntry<T> {
-    private IConfigurableJavaPlugin _rootInstance;
+    private static IConfigurableJavaPlugin _rootInstance;
     private String path;
-    private T content;
+    private T value;
     private String name;
 
-    public ConfigEntry(String name, String path, T content, IConfigurableJavaPlugin _rootInstance) {
+    /**
+     *
+     * @param name Name of the variable in specified in path config file.
+     * @param path Path to the file containing variable with defined name.
+     * @param value Value of the variable.
+     * @param _rootInstance Reference to the instance class.
+     *                      If null, reference will be obtained from IConfigurableJavaPlugin static method getInstance() when needed.
+     */
+    public ConfigEntry(String name, String path, T value, IConfigurableJavaPlugin _rootInstance) {
         this.name = name;
         this.path = path;
-        this.content = content;
-        this._rootInstance = _rootInstance;
+        this.value = value;
+        if (ConfigEntry._rootInstance == null)
+            ConfigEntry._rootInstance = _rootInstance;
     }
 
     public ConfigEntry(String name, String path) {
-        this(name, path, null, null);
+        this(name, path, null, IConfigurableJavaPlugin.getInstance());
     }
 
     public String getPath() {
         return path;
     }
-    public void setContent(T content) {
-        this.content = content;
+    public void setValue(T value) {
+        this.value = value;
     }
-    public T getContent() {
-        return content;
+    public T getValue() {
+        return value;
     }
     public String getName() {
         return name;
@@ -37,28 +46,27 @@ public class ConfigEntry<T> {
         return _rootInstance;
     }
     public void setRootInstance(IConfigurableJavaPlugin _rootInstance) {
-        this._rootInstance = _rootInstance;
+        if (ConfigEntry._rootInstance == null)
+            ConfigEntry._rootInstance = _rootInstance;
     }
 
     public boolean is(Object object) {
-        if (content == null)
+        if (value == null)
             return object == null;
 
-        Class<T> clazz = (Class<T>) content.getClass();
+        Class<T> clazz = (Class<T>) value.getClass();
         return clazz.isInstance(object);
     }
 
     public boolean validate() {
-        if (_rootInstance == null)
-            _rootInstance = IConfigurableJavaPlugin.getInstance();
-
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(
                 new File(_rootInstance.getDataFolder().getAbsolutePath() + File.pathSeparator + ConfigValidator.getFilePathFromConfig(path))
         );
-        if (content == null)
+
+        if (value == null)
             return false;
 
-        Class<T> clazz = (Class<T>) content.getClass();
+        Class<T> clazz = (Class<T>) value.getClass();
         if (clazz.isInstance(Integer.MAX_VALUE))
             return yml.isInt(getPathInFile(this.path));
         if (clazz.isInstance(Boolean.FALSE))
@@ -76,6 +84,6 @@ public class ConfigEntry<T> {
     }
 
     public static String getPathInFile(String path) {
-        return path.substring(path.indexOf("$") + 1);
+        return path.substring(path.indexOf("/") + 1);
     }
 }

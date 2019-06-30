@@ -22,24 +22,23 @@ public class Config extends ConfigValidator {
     private Language language;
 
     // ToDo: add databaseUsed variable or sth
-    public Config(@NotNull String packageName, @NotNull ConfigEntry[] configEntries, @Nullable YamlConfiguration msgFile) {
-        super(IConfigurableJavaPlugin.getInstance(packageName).getConfig(), IConfigurableJavaPlugin.getInstance(packageName).getDataFolder(), configEntries);
+    public Config(@NotNull String packageName, @NotNull ConfigEntryList configEntryList, @Nullable YamlConfiguration msgFile) {
+        super(IConfigurableJavaPlugin.getInstance(packageName), configEntryList);
+        this.dataFolder = _rootInstance.getDataFolder();
+        this.values = new HashMap<>(2);
+        this.database = new HashMap<>(6);
 
-        if (msgFile == null && _rootInstance.getResource("messages.yml") != null)
+        /*if (msgFile == null && _rootInstance.getResource("messages.yml") != null)
             msgFile = YamlConfiguration.loadConfiguration(new InputStreamReader(_rootInstance.getResource("messages.yml")));
 
         if (msgFile != null) {
             for (String str : msgFile.getKeys(true)) {
                 System.out.println(str);
             }
-        }
-
-        this.dataFolder = _rootInstance.getDataFolder();
-        this.values = new HashMap<>(2);
-        this.database = new HashMap<>(6);
+        }*/
     }
 
-    public Config(@NotNull String packageName, @NotNull ConfigEntry[] configEntryList) {
+    public Config(@NotNull String packageName, @NotNull ConfigEntryList configEntryList) {
         this(packageName, configEntryList, null);
     }
 
@@ -47,7 +46,7 @@ public class Config extends ConfigValidator {
         if (!validate())
             return false;
 
-        for (ConfigEntry entry : this.configEntryList) {
+        /*for (ConfigEntry entry : this.configEntryList) {
             String path = entry.getPath();
 
             if (path.contains("$")) {
@@ -55,7 +54,7 @@ public class Config extends ConfigValidator {
                 YamlConfiguration yml = YamlConfiguration.loadConfiguration(new File(_rootInstance.getDataFolder() + "/" + fName));
 
                 values.put(language.getPath() + path, yml.get(language.getPath() + path.substring(path.indexOf('$') + 1))); // update hash table 'values'
-                entry.setContent(yml.get(language.getPath() + path.substring(path.indexOf('$') + 1))); // update entry's content
+                entry.setValue(yml.get(language.getPath() + path.substring(path.indexOf('$') + 1))); // update entry's content
 
                 if (values.get(language.getPath() + path) == null) {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + prefix + "Message with id '" + entry.getName() + "' does not exists! Messages' file will be reset - the old one will be saved to messages.yml.old");
@@ -96,7 +95,7 @@ public class Config extends ConfigValidator {
         if ((int) database.get("type") == 0) {
             printError("database.type", ErrorCode.WRONG_VALUE);
             return false;
-        }
+        }*/
 
         return true;
     }

@@ -12,27 +12,26 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 public interface IConfigurableJavaPlugin {
+    static IConfigurableJavaPlugin _instance = getInstance("pl.wieczorekp");
+
     static IConfigurableJavaPlugin getInstance() {
-        return IConfigurableJavaPlugin.getInstance("pl.wieczorekp.wmap");
+        return _instance;
     }
 
-    /*static IConfigurableJavaPlugin getInstance(Method instanceMethod) {
-        return instanceMethod.invoke();
-    }*/
-
     static IConfigurableJavaPlugin getInstance(String packageName) {
-            Reflections reflections = new Reflections(packageName);
+        System.out.println(_instance);
+        if (_instance != null && packageName.equals("pl.wieczorekp"))
+            return _instance;
+        Reflections reflections = new Reflections(packageName);
 
-            Set<Class<? extends JavaPlugin>> subTypes = reflections.getSubTypesOf(JavaPlugin.class);
-            Iterator<Class<? extends JavaPlugin>> iterator = subTypes.iterator();
-
-            System.out.println(subTypes.size());
+        Set<Class<? extends JavaPlugin>> subTypes = reflections.getSubTypesOf(JavaPlugin.class);
+        Iterator<Class<? extends JavaPlugin>> iterator = subTypes.iterator();
 
         try {
             if (iterator.hasNext()) {
                 Class<? extends JavaPlugin> targetClass = iterator.next();
-//                System.out.println("klasa: " + targetClass.getName());
                 Method instanceMethod = targetClass.getDeclaredMethod("getInstance");
+
                 System.out.println("metoda: " + instanceMethod.toString());
                 return (IConfigurableJavaPlugin) instanceMethod.invoke(targetClass);
             }
@@ -45,6 +44,7 @@ public interface IConfigurableJavaPlugin {
         System.out.println("null!");
         return null;
     }
+
     // Override some of the JavaPlugin methods
     String getName();
 
