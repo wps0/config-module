@@ -3,6 +3,7 @@ package pl.wieczorekp.configmodule;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.util.Arrays;
 
 public class ConfigEntry<T> {
     private static IConfigurableJavaPlugin _rootInstance;
@@ -22,8 +23,12 @@ public class ConfigEntry<T> {
         this.name = name;
         this.path = path;
         this.value = value;
-        if (ConfigEntry._rootInstance == null)
-            ConfigEntry._rootInstance = _rootInstance;
+        if (ConfigEntry._rootInstance == null) {
+            if (_rootInstance == null)
+                ConfigEntry._rootInstance = IConfigurableJavaPlugin.getInstance();
+            else
+                ConfigEntry._rootInstance = _rootInstance;
+        }
     }
 
     public ConfigEntry(String name, String path) {
@@ -50,15 +55,10 @@ public class ConfigEntry<T> {
             ConfigEntry._rootInstance = _rootInstance;
     }
 
-    public boolean is(Object object) {
-        if (value == null)
-            return object == null;
-
-        Class<T> clazz = (Class<T>) value.getClass();
-        return clazz.isInstance(object);
-    }
-
     public boolean validate() {
+        if (_rootInstance != null)
+            return false;
+
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(
                 new File(_rootInstance.getDataFolder().getAbsolutePath() + File.pathSeparator + ConfigValidator.getFilePathFromConfig(path))
         );
@@ -83,7 +83,17 @@ public class ConfigEntry<T> {
         return false;
     }
 
+    public boolean is(Class<?> object) {
+        if (value == null)
+            return object == null;
+
+        System.out.println("C " + value.getClass().getTypeName());
+        System.out.println(object.getTypeName());
+        return object.getTypeName().equalsIgnoreCase(value.getClass().getTypeName());
+    }
+
     public static String getPathInFile(String path) {
-        return path.substring(path.indexOf("/") + 1);
+        int index = path.indexOf("/") + 1;
+        return index == 0 ? null : path.substring(index);
     }
 }

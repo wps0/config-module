@@ -1,20 +1,25 @@
 package pl.wieczorekp.configmodule.tests;
 
+import org.junit.Before;
 import org.junit.Test;
 import pl.wieczorekp.configmodule.Language;
 
 import static org.junit.Assert.*;
 
 public class LanguageTest {
+    private Language language;
+    @Before
+    public void setup() {
+        language = Language.ENGLISH;
+    }
+
     @Test
     public void getId() {
-        Language language = Language.ENGLISH;
         assertEquals(language.getId(), "en");
     }
 
     @Test
     public void getPath() {
-        Language language = Language.ENGLISH;
         assertEquals(language.getPath(), "en.");
     }
 

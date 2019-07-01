@@ -135,7 +135,7 @@ public abstract class ConfigValidator {
         if (!f.getAbsolutePath().equals(prevPath))
             yml = YamlConfiguration.loadConfiguration(f);
 
-        entry.is(yml.get(entry.getName()));
+        entry.is(yml.get(entry.getName()).getClass());
 
         prevPath = f.getAbsolutePath();
     }
