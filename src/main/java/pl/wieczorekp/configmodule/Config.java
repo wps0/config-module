@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Config extends ConfigValidator {
-    private HashMap<String, Object> values;
     private HashMap<String, String> messages;
     private HashMap<String, Object> database;
     private File dataFolder;
@@ -22,7 +21,6 @@ public class Config extends ConfigValidator {
     public Config(@NotNull String packageName, @NotNull ConfigEntryList configEntryList, @Nullable YamlConfiguration msgFile) {
         super(IConfigurableJavaPlugin.getInstance(packageName), configEntryList);
         this.dataFolder = _rootInstance.getDataFolder();
-        this.values = new HashMap<>(2);
         this.database = new HashMap<>(6);
 
         /*if (msgFile == null && _rootInstance.getResource("messages.yml") != null)
@@ -97,8 +95,10 @@ public class Config extends ConfigValidator {
         return true;
     }
 
+    // ToDo: w config entry name to bedzie sciezka w pliku, a path - sciezka do pliku.
+    //  moze jakies enumy da rade ogarnac dla kazdego pliku, ktory ma byc odczytywany czy cos,
     public Object getValue(String key) {
-        return values.get(key);
+        return ;
     }
 
     public String getMessage(String key) {

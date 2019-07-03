@@ -13,7 +13,7 @@ public abstract class ConfigValidator {
     protected IConfigurableJavaPlugin _rootInstance;
     protected File dataFolder;
     protected String prefix;
-    protected ConfigEntryList configEntryList; //ToDo: hash mapa
+    protected ConfigEntryList configEntryList;
 
     ///////////////////////////////////////////////////////////////////////////
     // public methods
@@ -67,14 +67,6 @@ public abstract class ConfigValidator {
         return status;
     }
 
-    public void revertOriginal(String path) {
-        File oldFile = new File(path);
-        if (!oldFile.renameTo(new File(path + ".old")))
-            return;
-
-        _rootInstance.saveResource(path, false);
-    }
-
     ///////////////////////////////////////////////////////////////////////////
     // protected methods
     ///////////////////////////////////////////////////////////////////////////
@@ -82,7 +74,7 @@ public abstract class ConfigValidator {
         validateEntry(entry, prevPath, yml, true);
     }
 
-    protected <T> void validateEntry(@NotNull ConfigEntry<T> entry, @NotNull String prevPath, @NotNull YamlConfiguration yml, boolean loadData) {
+    protected <T> void validateEntry(@NotNull ConfigEntry<T> entry, String prevPath, YamlConfiguration yml, boolean loadData) {
         String filePath = getFilePathFromConfig(entry.getPath());
         File f = createFileFromPath(_rootInstance, filePath);
 
@@ -97,7 +89,6 @@ public abstract class ConfigValidator {
                 return;
             }
         }
-
         System.out.println(f.getAbsolutePath());
         if (!f.getAbsolutePath().equals(prevPath))
             yml = YamlConfiguration.loadConfiguration(f);
@@ -156,7 +147,7 @@ public abstract class ConfigValidator {
      * @return Path to yml file.
      */
     public static String getFilePathFromConfig(String path) {
-        System.out.println("getFilePathFromConfig input: " + path);
+//        System.out.println("getFilePathFromConfig input: " + path);
         if (path == null)
             throw new NullPointerException("File path cannot be null!");
 
@@ -168,6 +159,18 @@ public abstract class ConfigValidator {
 
     public static File createFileFromPath(IConfigurableJavaPlugin instance, String path) {
         return new File(instance.getDataFolder() + String.valueOf(separatorChar) + path);
+    }
+
+    public static void revertOriginal(String path) {
+        revertOriginal(path, IConfigurableJavaPlugin.getInstance());
+    }
+
+    public static void revertOriginal(String path, IConfigurableJavaPlugin _rootInstance) {
+        File oldFile = new File(path);
+        if (!oldFile.renameTo(new File(path + ".old")))
+            return;
+
+        _rootInstance.saveResource(path, false);
     }
 
     protected enum ErrorCode {
