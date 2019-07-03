@@ -71,6 +71,10 @@ public class ConfigEntryList {
         return objects;
     }
 
+    public int size() {
+        return integers.size() + booleans.size() + strings.size() + objects.size();
+    }
+
     public static <T> ArrayList<ConfigEntry<T>> makeList(ConfigEntry<T>... entries) {
         return new ArrayList<>(Arrays.asList(entries));
     }

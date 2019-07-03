@@ -1,14 +1,26 @@
 package pl.wieczorekp.configmodule.tests;
 
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import pl.wieczorekp.configmodule.ConfigEntry;
 import pl.wieczorekp.configmodule.Language;
 
+import java.io.File;
+import java.io.IOException;
+
+import static java.io.File.separatorChar;
 import static org.junit.Assert.*;
 
 public class ConfigEntryTest {
+    private static File configFile;
     private ConfigEntry<Integer> configEntry;
+
+    @BeforeClass
+    public static void setUpClass() {
+        configFile = new File(System.getProperty("user.dir") + separatorChar + "config.yml");
+    }
 
     @Before
     public void setUp() {
@@ -52,19 +64,19 @@ public class ConfigEntryTest {
     public void is_language_boolean() {
         ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry", "o lol ale padaka");
         stringConfigEntry.setValue(Language.ENGLISH);
-        assertTrue(stringConfigEntry.is(Boolean.class));
+        assertFalse(stringConfigEntry.is(Boolean.class));
     }
     @Test
     public void is_language_integer() {
         ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry", "o lol ale padaka");
         stringConfigEntry.setValue(Language.ENGLISH);
-        assertTrue(stringConfigEntry.is(Integer.class));
+        assertFalse(stringConfigEntry.is(Integer.class));
     }
     @Test
     public void is_language_string() {
         ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry", "o lol ale padaka");
         stringConfigEntry.setValue(Language.ENGLISH);
-        assertTrue(stringConfigEntry.is(String.class));
+        assertFalse(stringConfigEntry.is(String.class));
     }
 
     @Test
@@ -110,7 +122,7 @@ public class ConfigEntryTest {
 
     @Test
     public void getPathInFile_null() {
-        assertNull(ConfigEntry.getPathInFile(configEntry.getPath()));
+        assertEquals("randomInt", ConfigEntry.getPathInFile(configEntry));
     }
     @Test
     public void getPathInFile_notNull() {
@@ -118,4 +130,19 @@ public class ConfigEntryTest {
         assertNotNull(ConfigEntry.getPathInFile(configEntry.getPath()));
     }
 
+    @Test
+    public void validate() throws IOException {
+        configFile.deleteOnExit();
+        configFile.createNewFile();
+
+        YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
+        String pathInFile = ConfigEntry.getPathInFile(configEntry.getPath());
+        int value = 117770;
+
+        yml.set((pathInFile == null ? "" : pathInFile) + configEntry.getName(), value);
+        yml.save(configFile);
+        configEntry.setValue(value);
+
+        assertTrue(configEntry.validate(yml));
+    }
 }

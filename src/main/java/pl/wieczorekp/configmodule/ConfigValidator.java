@@ -1,8 +1,8 @@
 package pl.wieczorekp.configmodule;
 
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
@@ -11,7 +11,6 @@ import static java.io.File.separatorChar;
 public abstract class ConfigValidator {
     private boolean status;
     protected IConfigurableJavaPlugin _rootInstance;
-    protected FileConfiguration _config;
     protected File dataFolder;
     protected String prefix;
     protected ConfigEntryList configEntryList; //ToDo: hash mapa
@@ -19,16 +18,15 @@ public abstract class ConfigValidator {
     ///////////////////////////////////////////////////////////////////////////
     // public methods
     ///////////////////////////////////////////////////////////////////////////
-    protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, FileConfiguration _config, File dataFolder, String prefix, ConfigEntryList paths) {
+    protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, File dataFolder, String prefix, ConfigEntryList paths) {
         this._rootInstance = _rootInstance;
-        this._config = _config;
         this.dataFolder = dataFolder;
         this.prefix = prefix;
         this.configEntryList = paths;
     }
 
     protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, ConfigEntryList paths) {
-        this(_rootInstance, _rootInstance.getConfig(), _rootInstance.getDataFolder(), _rootInstance.getName() + " ", paths);
+        this(_rootInstance, _rootInstance.getDataFolder(), _rootInstance.getName() + " ", paths);
     }
 
     protected abstract boolean additionalBeforeValidation();
@@ -41,12 +39,16 @@ public abstract class ConfigValidator {
         if (!additionalBeforeValidation())
             status = false;
 
-        if (configEntryList == null)
+        if (configEntryList == null || configEntryList.size() == 0)
             return true;
+
+        if (ConfigEntry.getRootInstance() == null)
+            ConfigEntry.setRootInstance(_rootInstance);
+
+        // ToDo: zoptymalizować - tworzyć tylko pliki i sprawdzać czy są na startupie
 
         YamlConfiguration yml = null;
         String prevPath = null;
-
         for (ConfigEntry<Boolean> entry : configEntryList.getBooleans())
             validateEntry(entry, prevPath, yml);
 
@@ -56,67 +58,31 @@ public abstract class ConfigValidator {
         for (ConfigEntry<String> entry : configEntryList.getStrings())
             validateEntry(entry, prevPath, yml);
 
-        /*
-        boolean configExists = false;
-        if (!new File(dataFolder, "config.yml").exists()) {
-            if (_rootInstance.getResource("config.yml") != null) {
-                _rootInstance.saveDefaultConfig();
-                this._config = _rootInstance.getConfig();
-            } else
-                configExists = true;
-        }
+        for (ConfigEntry<Object> entry : configEntryList.getObjects())
+            validateEntry(entry, prevPath, yml);
 
-        if (!new File(dataFolder, "messages.yml").exists() && _rootInstance.getResource("messages.yml") != null)
-            _rootInstance.saveResource("messages.yml", false);
-
-        for (ConfigEntry target : configEntryList) {
-            if (target.getRootInstance() == null)
-                target.setRootInstance(_rootInstance);
-
-            if (target.getPath().contains("$")) {
-                String customFilePath = getFilePathFromConfig(target.getPath());
-                File f = new File(_rootInstance.getDataFolder() + String.valueOf(separatorChar) + customFilePath);
-
-                if (!f.exists()) {
-                    printError(customFilePath, ErrorCode.NOT_EXISTED);
-
-                    _rootInstance.saveResource(customFilePath, false);
-                    if (!f.exists()) {
-                        printError(customFilePath, ErrorCode.FILE_CREATION_ERROR);
-                        status = false;
-                    }
-                }
-                continue;
-            }
-
-            if (!configExists && !_config.contains(target.getPath())) {
-                status = false;
-                if (!_config.isSet(target.getPath())) {
-                    printError(target.getPath(), ErrorCode.NOT_SET);
-                    continue;
-                }
-                printError(target.getPath(), ErrorCode.NOT_EXIST);
-                continue;
-            }
-
-            target.setValue(_config.get(target.getPath()));
-        }
-
-        for (ConfigEntry ce : configEntryList) {
-            if (!ce.validate()) {
-                status = false;
-                printError(ce.getName() + (ce.is(Language.class) ? " in one of the languages" : "" ), ErrorCode.WRONG_VALUE);
-            }
-        }
-        */
         if (!additionalAfterValidation())
             status = false;
 
         return status;
-
     }
 
-    private <T> void validateEntry(ConfigEntry<T> entry, String prevPath, YamlConfiguration yml) {
+    public void revertOriginal(String path) {
+        File oldFile = new File(path);
+        if (!oldFile.renameTo(new File(path + ".old")))
+            return;
+
+        _rootInstance.saveResource(path, false);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // protected methods
+    ///////////////////////////////////////////////////////////////////////////
+    protected <T> void validateEntry(@NotNull ConfigEntry<T> entry, String prevPath, YamlConfiguration yml) {
+        validateEntry(entry, prevPath, yml, true);
+    }
+
+    protected <T> void validateEntry(@NotNull ConfigEntry<T> entry, @NotNull String prevPath, @NotNull YamlConfiguration yml, boolean loadData) {
         String filePath = getFilePathFromConfig(entry.getPath());
         File f = createFileFromPath(_rootInstance, filePath);
 
@@ -128,6 +94,7 @@ public abstract class ConfigValidator {
             if (!f.exists()) {
                 printError(filePath, ErrorCode.FILE_CREATION_ERROR);
                 status = false;
+                return;
             }
         }
 
@@ -135,14 +102,18 @@ public abstract class ConfigValidator {
         if (!f.getAbsolutePath().equals(prevPath))
             yml = YamlConfiguration.loadConfiguration(f);
 
-        entry.is(yml.get(entry.getName()).getClass());
+        if (loadData)
+            entry.setValue((T) yml.get(ConfigEntry.getPathInFile(entry)));
+
+        if (!entry.validate(yml)) {
+            status = false;
+            printError(ConfigEntry.getPathInFile(entry), ErrorCode.WRONG_VALUE);
+            revertOriginal(f.getAbsolutePath());
+        }
 
         prevPath = f.getAbsolutePath();
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // protected methods
-    ///////////////////////////////////////////////////////////////////////////
     protected <T> void addPath(ConfigEntry<T> configEntry) {
         configEntryList.add(configEntry);
     }
@@ -179,7 +150,6 @@ public abstract class ConfigValidator {
         Bukkit.getConsoleSender().sendMessage(message);
     }
 
-
     /**
      *
      * @param path Path received from ConfigEntry.
@@ -193,8 +163,7 @@ public abstract class ConfigValidator {
         if (!path.contains("/"))
             return path;
 
-        int lastIndex = path.replace('/', separatorChar).trim().lastIndexOf(separatorChar);
-        return path.substring(0, lastIndex == -1 ? 0 : lastIndex);
+        return path.substring(0, path.replace('/', separatorChar).trim().lastIndexOf(separatorChar));
     }
 
     public static File createFileFromPath(IConfigurableJavaPlugin instance, String path) {

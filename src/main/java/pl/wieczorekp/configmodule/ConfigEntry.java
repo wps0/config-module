@@ -1,9 +1,7 @@
 package pl.wieczorekp.configmodule;
 
 import org.bukkit.configuration.file.YamlConfiguration;
-
-import java.io.File;
-import java.util.Arrays;
+import org.jetbrains.annotations.NotNull;
 
 public class ConfigEntry<T> {
     private static IConfigurableJavaPlugin _rootInstance;
@@ -47,35 +45,28 @@ public class ConfigEntry<T> {
     public String getName() {
         return name;
     }
-    public IConfigurableJavaPlugin getRootInstance() {
+    public static IConfigurableJavaPlugin getRootInstance() {
         return _rootInstance;
     }
-    public void setRootInstance(IConfigurableJavaPlugin _rootInstance) {
+    public static void setRootInstance(IConfigurableJavaPlugin _rootInstance) {
         if (ConfigEntry._rootInstance == null)
             ConfigEntry._rootInstance = _rootInstance;
     }
 
-    public boolean validate() {
-        if (_rootInstance != null)
-            return false;
-
-        YamlConfiguration yml = YamlConfiguration.loadConfiguration(
-                new File(_rootInstance.getDataFolder().getAbsolutePath() + File.pathSeparator + ConfigValidator.getFilePathFromConfig(path))
-        );
-
+    public boolean validate(@NotNull YamlConfiguration yml) {
         if (value == null)
             return false;
 
         Class<T> clazz = (Class<T>) value.getClass();
         if (clazz.isInstance(Integer.MAX_VALUE))
-            return yml.isInt(getPathInFile(this.path));
+            return yml.isInt(getPathInFile(this));
         if (clazz.isInstance(Boolean.FALSE))
-            return yml.isBoolean(getPathInFile(this.path));
+            return yml.isBoolean(getPathInFile(this));
         if (clazz.isInstance("."))
-            return yml.isString(getPathInFile(this.path));
+            return yml.isString(getPathInFile(this));
         if (clazz.isInstance(Language.POLISH) || clazz.isInstance(Language.ENGLISH)) {
             for (Language language : Language.values())
-                if (!yml.isString(language.getId() + "." + getPathInFile(this.path)))
+                if (!yml.isString(language.getId() + "." + getPathInFile(this)))
                     return false;
             return true;
         }
@@ -86,14 +77,18 @@ public class ConfigEntry<T> {
     public boolean is(Class<?> object) {
         if (value == null)
             return object == null;
-
-        System.out.println("C " + value.getClass().getTypeName());
-        System.out.println(object.getTypeName());
         return object.getTypeName().equalsIgnoreCase(value.getClass().getTypeName());
     }
 
+    public static String getPathInFile(ConfigEntry entry) {
+        if (entry.getPath().indexOf('/') == -1)
+            return getPathInFile(entry.getPath() + "/" + entry.getName());
+        return getPathInFile(entry.getPath());
+    }
+
+    @Deprecated
     public static String getPathInFile(String path) {
-        int index = path.indexOf("/") + 1;
+        int index = path.lastIndexOf("/") + 1;
         return index == 0 ? null : path.substring(index);
     }
 }

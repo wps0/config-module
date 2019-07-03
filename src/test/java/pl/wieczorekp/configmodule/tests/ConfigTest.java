@@ -2,7 +2,7 @@ package pl.wieczorekp.configmodule.tests;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static junit.framework.TestCase.fail;
 
 public class ConfigTest {
 
