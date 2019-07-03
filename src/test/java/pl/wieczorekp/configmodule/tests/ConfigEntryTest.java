@@ -121,13 +121,23 @@ public class ConfigEntryTest {
     }
 
     @Test
-    public void getPathInFile_null() {
+    public void getPathInFile_basic() {
         assertEquals("randomInt", ConfigEntry.getPathInFile(configEntry));
     }
     @Test
     public void getPathInFile_notNull() {
         configEntry = new ConfigEntry<>("AlaMaKota", "config.yml/ala.ma.kota");
-        assertNotNull(ConfigEntry.getPathInFile(configEntry.getPath()));
+        assertEquals("ala.ma.kota.AlaMaKota", ConfigEntry.getPathInFile(configEntry));
+    }
+    @Test
+    public void getPathInFile_multilevel() {
+        configEntry = new ConfigEntry<>("boolean1", "configuration/config.yml");
+        assertEquals("boolean1", ConfigEntry.getPathInFile(configEntry));
+    }
+    @Test
+    public void getPathInFile_multi() {
+        configEntry = new ConfigEntry<>("string3", "very/long/directory/tree/configuration/secret.yml/super.secret.list");
+        assertEquals("super.secret.list.string3", ConfigEntry.getPathInFile(configEntry));
     }
 
     @Test
@@ -136,10 +146,10 @@ public class ConfigEntryTest {
         configFile.createNewFile();
 
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
-        String pathInFile = ConfigEntry.getPathInFile(configEntry.getPath());
+        String pathInFile = ConfigEntry.getPathInFile(configEntry);
         int value = 117770;
 
-        yml.set((pathInFile == null ? "" : pathInFile) + configEntry.getName(), value);
+        yml.set((pathInFile == null ? "" : pathInFile), value);
         yml.save(configFile);
         configEntry.setValue(value);
 

@@ -3,7 +3,11 @@ package pl.wieczorekp.configmodule;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class ConfigEntry<T> {
+    private final static Pattern pathInFilePattern = Pattern.compile("((yml|txt)\\/?(.*)?)$");
     private static IConfigurableJavaPlugin _rootInstance;
     private String path;
     private T value;
@@ -80,10 +84,16 @@ public class ConfigEntry<T> {
         return object.getTypeName().equalsIgnoreCase(value.getClass().getTypeName());
     }
 
-    public static String getPathInFile(ConfigEntry entry) {
-        if (entry.getPath().indexOf('/') == -1)
-            return getPathInFile(entry.getPath() + "/" + entry.getName());
-        return getPathInFile(entry.getPath());
+    public static String getPathInFile(@NotNull ConfigEntry entry) {
+        Matcher matcher = pathInFilePattern.matcher(entry.getPath());
+        if (!matcher.find())
+            return null;
+
+        String group = matcher.group(3);
+        if (!group.equals(""))
+            group += ".";
+
+        return group + entry.getName();
     }
 
     @Deprecated
