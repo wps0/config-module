@@ -22,7 +22,6 @@ public class Config extends ConfigValidator {
         super(IConfigurableJavaPlugin.getInstance(packageName), configEntryList);
         this.dataFolder = _rootInstance.getDataFolder();
         this.database = new HashMap<>(6);
-
         /*if (msgFile == null && _rootInstance.getResource("messages.yml") != null)
             msgFile = YamlConfiguration.loadConfiguration(new InputStreamReader(_rootInstance.getResource("messages.yml")));
 
@@ -38,7 +37,7 @@ public class Config extends ConfigValidator {
     }
 
     public boolean load() {
-        if (!validate())
+        if (!this.load())
             return false;
 
         /*for (ConfigEntry entry : this.configEntryList) {
@@ -98,7 +97,7 @@ public class Config extends ConfigValidator {
     // ToDo: w config entry name to bedzie sciezka w pliku, a path - sciezka do pliku.
     //  moze jakies enumy da rade ogarnac dla kazdego pliku, ktory ma byc odczytywany czy cos,
     public Object getValue(String key) {
-        return ;
+        return key;
     }
 
     public String getMessage(String key) {

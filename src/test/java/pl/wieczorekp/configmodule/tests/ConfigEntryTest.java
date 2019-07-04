@@ -111,11 +111,11 @@ public class ConfigEntryTest {
 
     @Test
     public void is_string() {
-        ConfigEntry<String> stringConfigEntry = new ConfigEntry<>("stringEntry", "config.yml/asds.a", "aa", null);
+        ConfigEntry<String> stringConfigEntry = new ConfigEntry<>("stringEntry", "config.yml/asds.a", "aa");
         assertTrue(stringConfigEntry.is(String.class));
     }
 
-    @Test
+    @Test()
     public void is_null() {
         assertFalse(configEntry.is(Integer.class));
     }

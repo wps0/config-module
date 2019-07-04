@@ -1,7 +1,8 @@
 package pl.wieczorekp.configmodule;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
 
 public class ConfigEntryList {
     private ArrayList<ConfigEntry<Integer>> integers;
@@ -9,7 +10,8 @@ public class ConfigEntryList {
     private ArrayList<ConfigEntry<String>> strings;
     private ArrayList<ConfigEntry<Object>> objects;
 
-    public ConfigEntryList(ArrayList<ConfigEntry<Integer>> integers, ArrayList<ConfigEntry<Boolean>> booleans, ArrayList<ConfigEntry<String>> strings, ArrayList<ConfigEntry<Object>> objects) {
+    public ConfigEntryList(@NotNull ArrayList<ConfigEntry<Integer>> integers, @NotNull ArrayList<ConfigEntry<Boolean>> booleans,
+                           @NotNull ArrayList<ConfigEntry<String>> strings, @NotNull ArrayList<ConfigEntry<Object>> objects) {
         this.integers = integers;
         this.booleans = booleans;
         this.strings = strings;
@@ -20,7 +22,7 @@ public class ConfigEntryList {
         this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
 
-    public <T> void add(ConfigEntry<T> value) {
+    public <T> void add(@NotNull ConfigEntry<T> value) {
         if (value.is(Boolean.class)) {
             booleans.add((ConfigEntry<Boolean>) value);
             return;
@@ -39,19 +41,19 @@ public class ConfigEntryList {
         objects.add((ConfigEntry<Object>) value);
     }
 
-    public void addInteger(ConfigEntry<Integer> value) {
+    public void addInteger(@NotNull ConfigEntry<Integer> value) {
         integers.add(value);
     }
 
-    public void addBoolean(ConfigEntry<Boolean> value) {
+    public void addBoolean(@NotNull ConfigEntry<Boolean> value) {
         booleans.add(value);
     }
 
-    public void addString(ConfigEntry<String> value) {
+    public void addString(@NotNull ConfigEntry<String> value) {
         strings.add(value);
     }
 
-    public void addObject(ConfigEntry<Object> value) {
+    public void addObject(@NotNull ConfigEntry<Object> value) {
         objects.add(value);
     }
 

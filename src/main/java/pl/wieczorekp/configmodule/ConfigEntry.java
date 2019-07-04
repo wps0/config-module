@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,7 +27,7 @@ public class ConfigEntry<T> {
     /**
      * The compiled pattern used in detecting path in file.
      */
-    @Getter private final static Pattern pathInFilePattern = Pattern.compile("((yml|txt)\\/?(.*)?)$");
+    @Getter private final static Pattern pathInFilePattern = Pattern.compile("((yml|txt)/?(.*)?)$");
 
     /**
      * The reference to instance of the JavaPlugin.
@@ -44,7 +45,7 @@ public class ConfigEntry<T> {
     @Getter private String name;
 
     /**
-     * The value of held property.
+     * The value of the held property.
      */
     @Getter @Setter
     private T value;
@@ -54,15 +55,14 @@ public class ConfigEntry<T> {
      * @param name Path to the property in file.
      * @param path Path to the file containing variable with defined path.
      * @param value Value of the property.
-     *                      If null, reference will be obtained from IConfigurableJavaPlugin static method getInstance() when needed.
      */
-    public ConfigEntry(String name, String path, T value) {
+    public ConfigEntry(@NotNull String name, @NotNull String path, @Nullable T value) {
         this.name = name;
         this.path = path;
         this.value = value;
     }
 
-    public ConfigEntry(String name, String path) {
+    public ConfigEntry(@NotNull String name, @NotNull String path) {
         this(name, path, null);
     }
 
@@ -92,13 +92,17 @@ public class ConfigEntry<T> {
         return false;
     }
 
-    public boolean is(Class<?> object) {
+    public boolean is(@Nullable Class<?> object) {
+        if (object == null)
+            return value == null;
         if (value == null)
-            return object == null;
+            return false;
+
         return object.getTypeName().equalsIgnoreCase(value.getClass().getTypeName());
     }
 
 
+    @Nullable
     public static String getPathInFile(@NotNull ConfigEntry entry) {
         Matcher matcher = pathInFilePattern.matcher(entry.getPath());
         if (!matcher.find())
@@ -111,8 +115,9 @@ public class ConfigEntry<T> {
         return group + entry.getName();
     }
 
+    @Nullable
     @Deprecated
-    public static String getPathInFile(String path) {
+    public static String getPathInFile(@NotNull String path) {
         int index = path.lastIndexOf("/") + 1;
         return index == 0 ? null : path.substring(index);
     }

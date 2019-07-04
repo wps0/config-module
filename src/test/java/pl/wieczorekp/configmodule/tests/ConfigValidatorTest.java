@@ -62,7 +62,7 @@ public class ConfigValidatorTest {
     @Test
     public void validate() {
         fail("This test has yet to be implemented.");
-        //assertTrue(validator.validate());
+        //assertTrue(validator.load());
     }
 
     @Test

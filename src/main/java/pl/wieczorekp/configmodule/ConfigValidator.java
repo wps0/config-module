@@ -32,7 +32,7 @@ public abstract class ConfigValidator {
     protected abstract boolean additionalBeforeValidation();
     protected abstract boolean additionalAfterValidation();
 
-    public boolean validate() {
+    public boolean load() {
         if (!dataFolder.exists())
             status = dataFolder.mkdir();
 
@@ -42,8 +42,8 @@ public abstract class ConfigValidator {
         if (configEntryList == null || configEntryList.size() == 0)
             return true;
 
-        if (ConfigEntry.getRootInstance() == null)
-            ConfigEntry.setRootInstance(_rootInstance);
+//        if (ConfigEntry.getRootInstance() == null)
+//            ConfigEntry.setRootInstance(_rootInstance);
 
         // ToDo: zoptymalizować - tworzyć tylko pliki i sprawdzać czy są na startupie
 
