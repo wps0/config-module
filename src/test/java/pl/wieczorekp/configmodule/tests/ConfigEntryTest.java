@@ -24,13 +24,9 @@ public class ConfigEntryTest {
 
     @Before
     public void setUp() {
-        configEntry = new ConfigEntry<>("randomInt", "config.yml");
+        configEntry = new ConfigEntry<>("randomInt");
     }
 
-    @Test
-    public void getPath() {
-        assertEquals("config.yml", configEntry.getPath());
-    }
 
     @Test
     public void setValue() {
@@ -56,44 +52,44 @@ public class ConfigEntryTest {
 
     @Test
     public void is_language() {
-        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry", "o lol ale padaka");
+        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry");
         stringConfigEntry.setValue(Language.ENGLISH);
         assertTrue(stringConfigEntry.is(Language.class));
     }
     @Test
     public void is_language_boolean() {
-        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry", "o lol ale padaka");
+        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry");
         stringConfigEntry.setValue(Language.ENGLISH);
         assertFalse(stringConfigEntry.is(Boolean.class));
     }
     @Test
     public void is_language_integer() {
-        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry", "o lol ale padaka");
+        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry");
         stringConfigEntry.setValue(Language.ENGLISH);
         assertFalse(stringConfigEntry.is(Integer.class));
     }
     @Test
     public void is_language_string() {
-        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry", "o lol ale padaka");
+        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry");
         stringConfigEntry.setValue(Language.ENGLISH);
         assertFalse(stringConfigEntry.is(String.class));
     }
 
     @Test
     public void is_boolean() {
-        ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry", "config.yml/boolTest.bool");
+        ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry");
         booleanConfigEntry.setValue(false);
         assertTrue(booleanConfigEntry.is(Boolean.class));
     }
     @Test
     public void is_boolean_string() {
-        ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry", "config.yml/boolTest.bool");
+        ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry");
         booleanConfigEntry.setValue(false);
         assertFalse(booleanConfigEntry.is(String.class));
     }
     @Test
     public void is_boolean_integer() {
-        ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry", "config.yml/boolTest.bool");
+        ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry");
         booleanConfigEntry.setValue(false);
         assertFalse(booleanConfigEntry.is(Integer.class));
     }
@@ -111,7 +107,7 @@ public class ConfigEntryTest {
 
     @Test
     public void is_string() {
-        ConfigEntry<String> stringConfigEntry = new ConfigEntry<>("stringEntry", "config.yml/asds.a", "aa");
+        ConfigEntry<String> stringConfigEntry = new ConfigEntry<>("stringEntry", "aa");
         assertTrue(stringConfigEntry.is(String.class));
     }
 
@@ -122,22 +118,17 @@ public class ConfigEntryTest {
 
     @Test
     public void getPathInFile_basic() {
-        assertEquals("randomInt", ConfigEntry.getPathInFile(configEntry));
+        assertEquals("randomInt", configEntry.getName());
     }
     @Test
     public void getPathInFile_notNull() {
-        configEntry = new ConfigEntry<>("AlaMaKota", "config.yml/ala.ma.kota");
-        assertEquals("ala.ma.kota.AlaMaKota", ConfigEntry.getPathInFile(configEntry));
-    }
-    @Test
-    public void getPathInFile_multilevel() {
-        configEntry = new ConfigEntry<>("boolean1", "configuration/config.yml");
-        assertEquals("boolean1", ConfigEntry.getPathInFile(configEntry));
+        configEntry = new ConfigEntry<>("AlaMaKota", 2);
+        assertEquals("AlaMaKota", configEntry.getName());
     }
     @Test
     public void getPathInFile_multi() {
-        configEntry = new ConfigEntry<>("string3", "very/long/directory/tree/configuration/secret.yml/super.secret.list");
-        assertEquals("super.secret.list.string3", ConfigEntry.getPathInFile(configEntry));
+        configEntry = new ConfigEntry<>("super.secret.list.string3");
+        assertEquals("super.secret.list.string3", configEntry.getName());
     }
 
     @Test
@@ -146,7 +137,7 @@ public class ConfigEntryTest {
         configFile.createNewFile();
 
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
-        String pathInFile = ConfigEntry.getPathInFile(configEntry);
+        String pathInFile = configEntry.getName();
         int value = 117770;
 
         yml.set((pathInFile == null ? "" : pathInFile), value);

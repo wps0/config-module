@@ -59,20 +59,19 @@ public class ConfigEntry<T> {
         if (value == null)
             return false;
 
-        String path = getPathInFile(this);
-        if (path == null)
+        if (name == null)
             return false;
 
         Class<T> clazz = (Class<T>) value.getClass();
         if (clazz.isInstance(Integer.MAX_VALUE))
-            return yml.isInt(path);
+            return yml.isInt(name);
         if (clazz.isInstance(Boolean.FALSE))
-            return yml.isBoolean(path);
+            return yml.isBoolean(name);
         if (clazz.isInstance("."))
-            return yml.isString(path);
+            return yml.isString(name);
         if (clazz.isInstance(Language.POLISH) || clazz.isInstance(Language.ENGLISH)) {
             for (Language language : Language.values())
-                if (!yml.isString(language.getId() + "." + path))
+                if (!yml.isString(language.getId() + "." + name))
                     return false;
             return true;
         }
@@ -87,12 +86,5 @@ public class ConfigEntry<T> {
             return false;
 
         return object.getTypeName().equalsIgnoreCase(value.getClass().getTypeName());
-    }
-
-
-    @Nullable
-    @Deprecated
-    public static String getPathInFile(@NotNull ConfigEntry entry) {
-        return entry.getName();
     }
 }
