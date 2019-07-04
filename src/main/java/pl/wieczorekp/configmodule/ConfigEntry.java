@@ -13,8 +13,9 @@ import java.util.regex.Pattern;
 /**
  * <p>
  *     A single configuration property. <br />
- *     Has the list defined to hold multiple object of this type - {@link ConfigEntryList ConfigEntryList}.
  *     ToDo: Tied up with {@link FilesystemWatcher FilesystemWatcher} allows of dynamic refresh of value field
+ *      add flag 'dynamic refresh' or sth. jesli tak, to za kazda zmiana sle do pluginu sygnal, zeby odswierzyc. moze bez sensu to jest? w sumie zjada tylko resource.
+ *      domyslnie na false niech
  * </p>
  *
  * ToDo: WatchService for synchronization of values!
@@ -23,21 +24,10 @@ import java.util.regex.Pattern;
  * @version 1.0
  */
 public class ConfigEntry<T> {
-
     /**
      * The compiled pattern used in detecting path in file.
      */
     @Getter private final static Pattern pathInFilePattern = Pattern.compile("((yml|txt)/?(.*)?)$");
-
-    /**
-     * The reference to instance of the JavaPlugin.
-     */
-//    private static IConfigurableJavaPlugin _rootInstance;
-
-    /**
-     * The path to the file containing this setting in filesystem.
-     */
-    @Getter private String path;
 
     /**
      * The path to the property in the file.
@@ -53,17 +43,15 @@ public class ConfigEntry<T> {
     /**
      *
      * @param name Path to the property in file.
-     * @param path Path to the file containing variable with defined path.
      * @param value Value of the property.
      */
-    public ConfigEntry(@NotNull String name, @NotNull String path, @Nullable T value) {
+    public ConfigEntry(@NotNull String name, @Nullable T value) {
         this.name = name;
-        this.path = path;
         this.value = value;
     }
 
-    public ConfigEntry(@NotNull String name, @NotNull String path) {
-        this(name, path, null);
+    public ConfigEntry(@NotNull String name) {
+        this(name, null);
     }
 
 
@@ -103,22 +91,8 @@ public class ConfigEntry<T> {
 
 
     @Nullable
-    public static String getPathInFile(@NotNull ConfigEntry entry) {
-        Matcher matcher = pathInFilePattern.matcher(entry.getPath());
-        if (!matcher.find())
-            return null;
-
-        String group = matcher.group(3);
-        if (!group.equals(""))
-            group += ".";
-
-        return group + entry.getName();
-    }
-
-    @Nullable
     @Deprecated
-    public static String getPathInFile(@NotNull String path) {
-        int index = path.lastIndexOf("/") + 1;
-        return index == 0 ? null : path.substring(index);
+    public static String getPathInFile(@NotNull ConfigEntry entry) {
+        return entry.getName();
     }
 }

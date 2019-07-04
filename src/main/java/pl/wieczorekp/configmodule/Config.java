@@ -12,16 +12,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Config extends ConfigValidator {
-    private HashMap<String, String> messages;
-    private HashMap<String, Object> database;
     private File dataFolder;
     private Language language;
 
     // ToDo: add databaseUsed variable or sth
-    public Config(@NotNull String packageName, @NotNull ConfigEntryList configEntryList, @Nullable YamlConfiguration msgFile) {
-        super(IConfigurableJavaPlugin.getInstance(packageName), configEntryList);
+    public Config(@NotNull String packageName, @NotNull ConfigFile... configFiles) {
+        super(IConfigurableJavaPlugin.getInstance(packageName), configFiles);
         this.dataFolder = _rootInstance.getDataFolder();
-        this.database = new HashMap<>(6);
         /*if (msgFile == null && _rootInstance.getResource("messages.yml") != null)
             msgFile = YamlConfiguration.loadConfiguration(new InputStreamReader(_rootInstance.getResource("messages.yml")));
 
@@ -32,15 +29,13 @@ public class Config extends ConfigValidator {
         }*/
     }
 
-    public Config(@NotNull String packageName, @NotNull ConfigEntryList configEntryList) {
-        this(packageName, configEntryList, null);
-    }
-
+    @Override
     public boolean load() {
-        if (!this.load())
+        if (!super.load())
             return false;
+        return true;
 
-        /*for (ConfigEntry entry : this.configEntryList) {
+        /*for (ConfigEntry entry : this.configFiles) {
             String path = entry.getPath();
 
             if (path.contains("$")) {
@@ -90,48 +85,46 @@ public class Config extends ConfigValidator {
             printError("database.type", ErrorCode.WRONG_VALUE);
             return false;
         }*/
-
-        return true;
     }
 
     // ToDo: w config entry name to bedzie sciezka w pliku, a path - sciezka do pliku.
     //  moze jakies enumy da rade ogarnac dla kazdego pliku, ktory ma byc odczytywany czy cos,
-    public Object getValue(String key) {
-        return key;
-    }
-
-    public String getMessage(String key) {
-        return messages.get(key);
-    }
-
-    public void sendMessage(String key, CommandSender destination) {
-        sendMessage(key, destination, null);
-    }
-
-    public void sendMessage(String key, CommandSender receiver, ArrayDeque<Map.Entry<String, String>> replace) {
-        String message = getMessage(key);
-
-        if (message == null) {
-            receiver.sendMessage(ChatColor.RED + "Unknown message");
-            return;
-        }
-
-        message = message.replace('&', ChatColor.COLOR_CHAR);
-        if (replace == null) {
-            receiver.sendMessage(message);
-            return;
-        }
-
-        for (Map.Entry<String, String> replaceEntry : replace) {
-            message = message.replace(replaceEntry.getKey(), replaceEntry.getValue());
-        }
-
-        receiver.sendMessage(message);
-    }
-
-    public HashMap<String, Object> getDatabaseCred() {
-        return database;
-    }
+//    public Object getValue(String key) {
+//        return key;
+//    }
+//
+//    public String getMessage(String key) {
+//        return messages.get(key);
+//    }
+//
+//    public void sendMessage(String key, CommandSender destination) {
+//        sendMessage(key, destination, null);
+//    }
+//
+//    public void sendMessage(String key, CommandSender receiver, ArrayDeque<Map.Entry<String, String>> replace) {
+//        String message = getMessage(key);
+//
+//        if (message == null) {
+//            receiver.sendMessage(ChatColor.RED + "Unknown message");
+//            return;
+//        }
+//
+//        message = message.replace('&', ChatColor.COLOR_CHAR);
+//        if (replace == null) {
+//            receiver.sendMessage(message);
+//            return;
+//        }
+//
+//        for (Map.Entry<String, String> replaceEntry : replace) {
+//            message = message.replace(replaceEntry.getKey(), replaceEntry.getValue());
+//        }
+//
+//        receiver.sendMessage(message);
+//    }
+//
+//    public HashMap<String, Object> getDatabaseCred() {
+//        return database;
+//    }
 
     //ToDo: przerobić na lambde!!!
     @Override

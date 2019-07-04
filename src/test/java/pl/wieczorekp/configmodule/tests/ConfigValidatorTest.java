@@ -28,35 +28,35 @@ public class ConfigValidatorTest {
         testPlugin = new TestPlugin();
         testPlugin.f.mkdir();
         testPlugin.f.deleteOnExit();
-        validator = new ConfigValidator(testPlugin, testPlugin.getDataFolder(), "Prefix", new ConfigEntryList(
-                ConfigEntryList.makeList( /*int*/
-                        new ConfigEntry<>("int1", "config.yml/superpath"),
-                        new ConfigEntry<>("int2", "config.yml"),
-                        new ConfigEntry<>("int3", "config.yml/testing.multilevel.arrays")
-                ), ConfigEntryList.makeList( /*bool*/
-                        new ConfigEntry<>("bool1", "config.yml"),
-                        new ConfigEntry<>("bool2", "ala/config.yml"),
-                        new ConfigEntry<>("bool3", "ala/config.yml/super")
-                ), ConfigEntryList.makeList( /*string*/
-                        new ConfigEntry<>("string1", "config.yml"),
-                        new ConfigEntry<>("string2", "config.yml/stringtest"),
-                        new ConfigEntry<>("string3", "oj/string/test.yml/kropka")
-                ),ConfigEntryList.makeList( /*object*/
-                        new ConfigEntry<>("object1", "config.yml/superpath"),
-                        new ConfigEntry<>("object2", "config.yml"),
-                        new ConfigEntry<>("object3", "config.yml/ala.ma.kota")
-                )
-        )) {
-            @Override
-            protected boolean additionalBeforeValidation() {
-                return true;
-            }
-
-            @Override
-            protected boolean additionalAfterValidation() {
-                return true;
-            }
-        };
+//        validator = new ConfigValidator(testPlugin, testPlugin.getDataFolder(), "Prefix", new ConfigEntryHashMap(
+//                ConfigEntryList.makeList( /*int*/
+//                        new ConfigEntry<>("int1", "config.yml/superpath"),
+//                        new ConfigEntry<>("int2", "config.yml"),
+//                        new ConfigEntry<>("int3", "config.yml/testing.multilevel.arrays")
+//                ), ConfigEntryList.makeList( /*bool*/
+//                        new ConfigEntry<>("bool1", "config.yml"),
+//                        new ConfigEntry<>("bool2", "ala/config.yml"),
+//                        new ConfigEntry<>("bool3", "ala/config.yml/super")
+//                ), ConfigEntryList.makeList( /*string*/
+//                        new ConfigEntry<>("string1", "config.yml"),
+//                        new ConfigEntry<>("string2", "config.yml/stringtest"),
+//                        new ConfigEntry<>("string3", "oj/string/test.yml/kropka")
+//                ),ConfigEntryList.makeList( /*object*/
+//                        new ConfigEntry<>("object1", "config.yml/superpath"),
+//                        new ConfigEntry<>("object2", "config.yml"),
+//                        new ConfigEntry<>("object3", "config.yml/ala.ma.kota")
+//                )
+//        )) {
+//            @Override
+//            protected boolean additionalBeforeValidation() {
+//                return true;
+//            }
+//
+//            @Override
+//            protected boolean additionalAfterValidation() {
+//                return true;
+//            }
+//        };
     }
 
     @Test
