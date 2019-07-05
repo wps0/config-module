@@ -65,26 +65,26 @@ public class ConfigValidatorTest {
         //assertTrue(validator.load());
     }
 
-    @Test
-    public void revertOriginal() throws IOException {
-        File file = new File(testPlugin.getDataFolder(), "config");
-        file.createNewFile();
-        file.deleteOnExit();
-        ConfigValidator.revertOriginal(testPlugin.getDataFolder().getAbsolutePath() + separator + "config", testPlugin);
-
-        boolean oldf = false, newf = false;
-        for (File f : testPlugin.getDataFolder().listFiles()) {
-            if (f.getName().equals("config.old"))
-                oldf = true;
-            else if (f.getName().equals("config"))
-                newf = true;
-
-            if (oldf && newf)
-                break;
-        }
-
-        assertTrue(oldf && newf);
-    }
+//    @Test
+//    public void revertOriginal() throws IOException {
+//        File file = new File(testPlugin.getDataFolder(), "config");
+//        file.createNewFile();
+//        file.deleteOnExit();
+//        ConfigValidator.revertOriginal(testPlugin.getDataFolder().getAbsolutePath() + separator + "config", testPlugin);
+//
+//        boolean oldf = false, newf = false;
+//        for (File f : testPlugin.getDataFolder().listFiles()) {
+//            if (f.getName().equals("config.old"))
+//                oldf = true;
+//            else if (f.getName().equals("config"))
+//                newf = true;
+//
+//            if (oldf && newf)
+//                break;
+//        }
+//
+//        assertTrue(oldf && newf);
+//    }
 
     @Test
     public void validateEntry() {

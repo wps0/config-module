@@ -10,8 +10,8 @@ import java.io.File;
 public class ConfigFile extends File {
     @Getter private ConfigEntryHashMap entries;
 
-    public ConfigFile(String path, ConfigEntryHashMap entries) {
-        super(path);
+    public ConfigFile(File parent, String path, ConfigEntryHashMap entries) {
+        super(parent, path);
         this.entries = entries;
     }
 }

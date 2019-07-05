@@ -6,7 +6,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.regex.Matcher;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.regex.Pattern;
 
 
@@ -50,19 +52,28 @@ public class ConfigEntry<T> {
         this.value = value;
     }
 
+//    public ConfigEntry(@NotNull String name, Class<T> tClass) throws IllegalAccessException, InstantiationException {
+//        this(name, tClass.newInstance());
+//    }
+
     public ConfigEntry(@NotNull String name) {
         this(name, null);
     }
 
-
+    /**
+     * ToDo: przerobić!!!
+     * @param yml
+     * @return <code>true</code> if only is the value correct, <code>false</code> otherwise.
+     */
     public boolean validate(@NotNull YamlConfiguration yml) {
         if (value == null)
             return false;
-
         if (name == null)
             return false;
+        System.out.println("Walidacja dla " + value);
 
         Class<T> clazz = (Class<T>) value.getClass();
+        System.out.println(clazz.getClass().getTypeName());
         if (clazz.isInstance(Integer.MAX_VALUE))
             return yml.isInt(name);
         if (clazz.isInstance(Boolean.FALSE))
@@ -87,4 +98,8 @@ public class ConfigEntry<T> {
 
         return object.getTypeName().equalsIgnoreCase(value.getClass().getTypeName());
     }
+
+//    public static <S, U> boolean compare(@NotNull S first, @NotNull U second) {
+//        return first.getClass().getTypeName().equalsIgnoreCase(second.getClass().getTypeName());
+//    }
 }

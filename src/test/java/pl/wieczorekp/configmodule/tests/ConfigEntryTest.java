@@ -132,8 +132,9 @@ public class ConfigEntryTest {
     }
 
     @Test
-    public void validate() throws IOException {
-        configFile.deleteOnExit();
+    public void validate() {
+        fail("This feature has yet to be implemented");
+        /*configFile.deleteOnExit();
         configFile.createNewFile();
 
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
@@ -144,6 +145,6 @@ public class ConfigEntryTest {
         yml.save(configFile);
         configEntry.setValue(value);
 
-        assertTrue(configEntry.validate(yml));
+        assertTrue(configEntry.validate(yml));*/
     }
 }

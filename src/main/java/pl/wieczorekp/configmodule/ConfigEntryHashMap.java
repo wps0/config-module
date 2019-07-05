@@ -6,6 +6,10 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Array;
 import java.util.*;
 
+
+/**
+ * ToDo: migrate to Map interface (not HashMap)
+ */
 public class ConfigEntryHashMap implements Map {
     private HashMap<Object, ConfigEntry<Integer>> integers;
     private HashMap<Object, ConfigEntry<Boolean>> booleans;
@@ -138,5 +142,12 @@ public class ConfigEntryHashMap implements Map {
 
     public HashMap<Object, ConfigEntry<Object>> getObjects() {
         return objects;
+    }
+
+    public static <T> HashMap<Object, ConfigEntry<T>> makeHashMap(ConfigEntry<T>... entries) {
+        HashMap<Object, ConfigEntry<T>> map = new HashMap<>();
+        for (ConfigEntry<T> entry : entries)
+            map.put(entry.getName(), entry);
+        return map;
     }
 }

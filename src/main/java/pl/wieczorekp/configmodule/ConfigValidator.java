@@ -5,18 +5,19 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
-
-import static java.io.File.separatorChar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class ConfigValidator {
+    private static Pattern pathPattern;
     private boolean status;
     protected IConfigurableJavaPlugin _rootInstance;
     protected File dataFolder;
     protected String prefix;
-    protected ArrayList<ConfigFile> configFiles;
+    protected List<@NotNull ConfigFile> configFiles;
 
     ///////////////////////////////////////////////////////////////////////////
     // public methods
@@ -25,10 +26,11 @@ public abstract class ConfigValidator {
         this._rootInstance = _rootInstance;
         this.dataFolder = dataFolder;
         this.prefix = prefix;
-        this.configFiles = (ArrayList<ConfigFile>) Arrays.asList(files);
+        this.configFiles = Arrays.asList(files);
+        pathPattern = Pattern.compile(_rootInstance.getName() + "([/\\\\])(.+)");
     }
 
-    protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, ConfigFile... files) {
+    protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, @NotNull ConfigFile... files) {
         this(_rootInstance, _rootInstance.getDataFolder(), _rootInstance.getName() + " ", files);
     }
 
@@ -45,26 +47,35 @@ public abstract class ConfigValidator {
         if (configFiles == null || configFiles.size() == 0)
             return true;
 
-//        if (ConfigEntry.getRootInstance() == null)
-//            ConfigEntry.setRootInstance(_rootInstance);
-
-        // ToDo: zoptymalizować - tworzyć tylko pliki i sprawdzać czy są tylko raz
-
-        YamlConfiguration yml = null;
-        String prevPath = null;
-
         for (ConfigFile configFile : configFiles) {
-            for (Map.Entry<Object, ConfigEntry<Boolean>> entry : configFile.getEntries().getBooleans().entrySet())
-                validateEntry(configFile, entry.getValue(), prevPath, yml);
+            // ToDo: usunac te wiadomosci, bo useless ogolnie
+            if (!configFile.exists()) {
+                System.out.println(configFile.getName() + " not exists!");
 
+                String path = getFilePathFromConfig(configFile);
+                if (_rootInstance.getResource(path) == null)
+                    throw new IllegalArgumentException("file " + path + " does not exists in plugin's jar file");
+
+                _rootInstance.saveResource(path, false);
+                if (!configFile.exists()) {
+                    status = false;
+                    throw new RuntimeException("could not create file " + configFile.getPath());
+                }
+            } else
+                System.out.println(configFile.getName() + " exists!");
+
+            YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
             for (Map.Entry<Object, ConfigEntry<Integer>> entry : configFile.getEntries().getIntegers().entrySet())
-                validateEntry(configFile, entry.getValue(), prevPath, yml);
+                validateEntry(configFile, entry.getValue(), yml);
+
+            for (Map.Entry<Object, ConfigEntry<Boolean>> entry : configFile.getEntries().getBooleans().entrySet())
+                validateEntry(configFile, entry.getValue(), yml);
 
             for (Map.Entry<Object, ConfigEntry<String>> entry : configFile.getEntries().getStrings().entrySet())
-                validateEntry(configFile, entry.getValue(), prevPath, yml);
+                validateEntry(configFile, entry.getValue(), yml);
 
             for (Map.Entry<Object, ConfigEntry<Object>> entry : configFile.getEntries().getObjects().entrySet())
-                validateEntry(configFile, entry.getValue(), prevPath, yml);
+                validateEntry(configFile, entry.getValue(), yml);
         }
 
         if (!additionalAfterValidation())
@@ -76,48 +87,24 @@ public abstract class ConfigValidator {
     ///////////////////////////////////////////////////////////////////////////
     // protected methods
     ///////////////////////////////////////////////////////////////////////////
-    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, String prevPath, YamlConfiguration yml) {
-        validateEntry(parent, entry, prevPath, yml, true);
+    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml) {
+        validateEntry(parent, entry, yml, true);
     }
 
-    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, String prevPath, YamlConfiguration yml, boolean loadData) {
-        String filePath = parent.getPath();
-        File f = createFileFromPath(_rootInstance, filePath);
-
-        // ToDo: usunac te wiadomosci, bo useless ogolnie
-        if (!f.exists()) {
-            printError(filePath, ErrorCode.NOT_EXISTED);
-
-            _rootInstance.saveResource(filePath, false);
-            if (!f.exists()) {
-                printError(filePath, ErrorCode.FILE_CREATION_ERROR);
-                status = false;
-                return;
-            }
-        }
-        System.out.println(f.getAbsolutePath());
-        if (!f.getAbsolutePath().equals(prevPath)) {
-            yml = YamlConfiguration.loadConfiguration(f);
-            prevPath = f.getAbsolutePath();
+    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml, boolean loadData) {
+        if (!entry.validate(yml)) {
+            printError(entry.getName(), ErrorCode.WRONG_VALUE);
+            revertOriginal(parent);
+            yml = YamlConfiguration.loadConfiguration(parent);
         }
 
         if (loadData)
             entry.setValue((T) yml.get(entry.getName()));
-
-        if (!entry.validate(yml)) {
-            status = false;
-            printError(entry.getName(), ErrorCode.WRONG_VALUE);
-            revertOriginal(f.getAbsolutePath());
-        }
     }
-
-//    protected <T> void addPath(ConfigEntry<T> configEntry) {
-//        configFiles.add(configEntry);
-//    }
 
     protected void printError(String value, ErrorCode code) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Value of '").append(value).append("' ");
+        sb.append(value.replaceFirst("(.)", "$1".toUpperCase())).append(" ");
 
         switch (code) {
             case NOT_EXISTED:
@@ -149,34 +136,37 @@ public abstract class ConfigValidator {
 
     /**
      *
-     * @param path Path received from ConfigEntry.
-     * @return Path to yml file.
+     * @return Relative path to the yml file.
      */
-    public static String getFilePathFromConfig(String path) {
-//        System.out.println("getFilePathFromConfig input: " + path);
-        if (path == null)
-            throw new NullPointerException("File path cannot be null!");
-
-        if (!path.contains("/"))
-            return path;
-
-        return path.substring(0, path.replace('/', separatorChar).trim().lastIndexOf(separatorChar));
+    public static String getFilePathFromConfig(ConfigFile configFile) {
+        System.out.println("getFilePathFromConfig input: " + configFile.getPath());
+        Matcher matcher = pathPattern.matcher(configFile.getPath());
+        if (!matcher.find())
+            throw new IllegalArgumentException("could not calculate path to the file");
+        return matcher.group(2);
     }
 
-    public static File createFileFromPath(IConfigurableJavaPlugin instance, String path) {
-        return new File(instance.getDataFolder() + String.valueOf(separatorChar) + path);
+//    public static File createFileFromPath(IConfigurableJavaPlugin instance, String path) {
+//        return new File(instance.getDataFolder() + String.valueOf(separatorChar) + path);
+//    }
+
+    public static void revertOriginal(ConfigFile configFile) {
+        revertOriginal(configFile, IConfigurableJavaPlugin.getInstance());
     }
 
-    public static void revertOriginal(String path) {
-        revertOriginal(path, IConfigurableJavaPlugin.getInstance());
-    }
+    public static void revertOriginal(ConfigFile configFile, IConfigurableJavaPlugin _rootInstance) {
+        System.out.println("ha");
+        File oldFile = new File(configFile.getAbsolutePath()); // ToDo: nie bedzie czasami z .olda bralo?
+        File prevOldFile = new File(configFile.getAbsolutePath() + ".old");
 
-    public static void revertOriginal(String path, IConfigurableJavaPlugin _rootInstance) {
-        File oldFile = new File(path);
-        if (!oldFile.renameTo(new File(path + ".old")))
-            return;
+        if (prevOldFile.exists() && !prevOldFile.delete())
+            throw new RuntimeException("cannot delete file " + prevOldFile.getName());
 
-        _rootInstance.saveResource(path, false);
+        if (!oldFile.renameTo(prevOldFile))
+            throw new RuntimeException("cannot rename file to " + oldFile.getName());
+
+        _rootInstance.saveResource(getFilePathFromConfig(configFile), false);
+
     }
 
     protected enum ErrorCode {
