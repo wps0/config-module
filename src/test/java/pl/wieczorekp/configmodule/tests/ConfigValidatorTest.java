@@ -1,33 +1,20 @@
 package pl.wieczorekp.configmodule.tests;
 
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import pl.wieczorekp.configmodule.*;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
-import static java.io.File.separator;
 import static java.io.File.separatorChar;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class ConfigValidatorTest {
-    private ConfigValidator validator;
-    private TestPlugin testPlugin;
 
     @Before
-    public void setUp() throws Exception {
-        testPlugin = new TestPlugin();
-        testPlugin.f.mkdir();
-        testPlugin.f.deleteOnExit();
+    public void setUp() {
 //        validator = new ConfigValidator(testPlugin, testPlugin.getDataFolder(), "Prefix", new ConfigEntryHashMap(
 //                ConfigEntryList.makeList( /*int*/
 //                        new ConfigEntry<>("int1", "config.yml/superpath"),
@@ -88,71 +75,73 @@ public class ConfigValidatorTest {
 
     @Test
     public void validateEntry() {
+        fail("This test has yet to be implemented.");
     }
 
     @Test
     public void validateEntry1() {
-    }
-
-    @Test
-    public void addPath() {
+        fail("This test has yet to be implemented.");
     }
 
     @Test
     public void printError() {
+        fail("This test has yet to be implemented.");
     }
 
     @Test
-    public void getFilePathFromConfig() {
+    public void getFilePathFromConfig_slash() {
+        ConfigValidator.setPathPattern(Pattern.compile("ConfigValidatorTest([/\\\\])(.+)"));
+        ConfigFile configFile = mock(ConfigFile.class);
+        when(configFile.getPath()).thenReturn("ConfigValidatorTest/cfg/config.yml");
+
+        assertEquals("should convert slashed absolute path to the file to the relative path", "cfg/config.yml", ConfigValidator.getFilePathFromConfig(configFile));
+    }
+    @Test
+    public void getFilePathFromConfig_backslash() {
+        ConfigValidator.setPathPattern(Pattern.compile("ConfigValidatorTest([/\\\\])(.+)"));
+        ConfigFile configFile = mock(ConfigFile.class);
+        when(configFile.getPath()).thenReturn("ConfigValidatorTest\\cfg\\config.yml");
+
+        assertEquals("should convert back slashed absolute path to the file to the relative path", "cfg\\config.yml", ConfigValidator.getFilePathFromConfig(configFile));
     }
 
     @Test
     public void createFileFromPath() {
+        fail("This test has yet to be implemented.");
     }
 
-    private class TestPlugin implements IConfigurableJavaPlugin {
-        public File f = new File(System.getProperty("user.dir") + separatorChar + "CVTest");
+    @Test
+    public void load() {
+        fail("This test has yet to be implemented.");
+    }
 
-        @Override
-        public String getName() {
-            return null;
-        }
+    @Test
+    public void revertOriginal() {
+        fail("This test has yet to be implemented.");
+    }
 
-        @Override
-        public File getDataFolder() {
-            return f;
-        }
+    @Test
+    public void revertOriginal1() {
+        fail("Test does not work as expected.");
+        String path = System.getProperty("user.dir");
+        File old = new File(path + separatorChar + "test.yml.old");
+        old.deleteOnExit();
 
-        @Override
-        public FileConfiguration getConfig() {
-            return null;
-        }
+//        ConfigFile configFile = new ConfigFile(new File(path), "config.yml", new ConfigEntryHashMap());
+        ConfigFile configFile = mock(ConfigFile.class);
+        configFile.deleteOnExit();
+        when(configFile.getAbsolutePath()).thenReturn("aa/test.yml");
+        when(configFile.renameTo(old)).thenReturn(true);
 
-        @Override
-        public InputStream getResource(String filename) {
-            return null;
-        }
+        IConfigurableJavaPlugin mockICJP = mock(IConfigurableJavaPlugin.class);
+        ConfigValidator.revertOriginal(configFile, mockICJP);
+    }
 
-        @Override
-        public void saveResource(String resourcePath, boolean replace) {
-            System.out.println("Saving resource " + resourcePath + "...");
-            try {
-                File file = new File(f, separatorChar + resourcePath);
-                file.createNewFile();
-                file.deleteOnExit();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    @Test
+    public void setPathPattern() {
+        assertNull("at the beginning, pathPattern should be null", ConfigValidator.getPathPattern());
+        ConfigValidator.setPathPattern(Pattern.compile("([/\\\\])(.+)"));
 
-        @Override
-        public Logger getLogger() {
-            return null;
-        }
-
-        @Override
-        public void saveDefaultConfig() {
-
-        }
+        assertEquals("pathPattern should be set to previously specified value", "([/\\\\])(.+)", ConfigValidator.getPathPattern().toString());
     }
 }

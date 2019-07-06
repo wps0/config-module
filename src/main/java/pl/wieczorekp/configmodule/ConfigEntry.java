@@ -29,7 +29,7 @@ public class ConfigEntry<T> {
     /**
      * The compiled pattern used in detecting path in file.
      */
-    @Getter private final static Pattern pathInFilePattern = Pattern.compile("((yml|txt)/?(.*)?)$");
+    @Getter private final static Pattern pathInFilePattern = Pattern.compile("(.*)(.*)");
 
     /**
      * The path to the property in the file.
@@ -73,7 +73,7 @@ public class ConfigEntry<T> {
         System.out.println("Walidacja dla " + value);
 
         Class<T> clazz = (Class<T>) value.getClass();
-        System.out.println(clazz.getClass().getTypeName());
+        System.out.println(clazz.getTypeName());
         if (clazz.isInstance(Integer.MAX_VALUE))
             return yml.isInt(name);
         if (clazz.isInstance(Boolean.FALSE))

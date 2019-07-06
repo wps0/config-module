@@ -2,31 +2,21 @@ package pl.wieczorekp.configmodule.tests;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import pl.wieczorekp.configmodule.ConfigEntry;
 import pl.wieczorekp.configmodule.Language;
 
-import java.io.File;
-import java.io.IOException;
-
-import static java.io.File.separatorChar;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ConfigEntryTest {
-    private static File configFile;
     private ConfigEntry<Integer> configEntry;
-
-    @BeforeClass
-    public static void setUpClass() {
-        configFile = new File(System.getProperty("user.dir") + separatorChar + "config.yml");
-    }
 
     @Before
     public void setUp() {
         configEntry = new ConfigEntry<>("randomInt");
     }
-
 
     @Test
     public void setValue() {
@@ -52,63 +42,40 @@ public class ConfigEntryTest {
 
     @Test
     public void is_language() {
-        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry");
-        stringConfigEntry.setValue(Language.ENGLISH);
-        assertTrue(stringConfigEntry.is(Language.class));
-    }
-    @Test
-    public void is_language_boolean() {
-        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry");
-        stringConfigEntry.setValue(Language.ENGLISH);
-        assertFalse(stringConfigEntry.is(Boolean.class));
-    }
-    @Test
-    public void is_language_integer() {
-        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry");
-        stringConfigEntry.setValue(Language.ENGLISH);
-        assertFalse(stringConfigEntry.is(Integer.class));
-    }
-    @Test
-    public void is_language_string() {
-        ConfigEntry<Language> stringConfigEntry = new ConfigEntry<>("stringEntry");
-        stringConfigEntry.setValue(Language.ENGLISH);
-        assertFalse(stringConfigEntry.is(String.class));
+        ConfigEntry<Language> languageConfigEntry = new ConfigEntry<>("lang");
+        languageConfigEntry.setValue(Language.ENGLISH);
+        assertTrue("ConfigEntry should be language", languageConfigEntry.is(Language.class));
+        assertFalse("ConfigEntry should be language, but is string", languageConfigEntry.is(String.class));
+        assertFalse("ConfigEntry should be language, but is integer", languageConfigEntry.is(Integer.class));
+        assertFalse("ConfigEntry should be language, but is boolean", languageConfigEntry.is(Boolean.class));
     }
 
     @Test
     public void is_boolean() {
         ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry");
         booleanConfigEntry.setValue(false);
-        assertTrue(booleanConfigEntry.is(Boolean.class));
-    }
-    @Test
-    public void is_boolean_string() {
-        ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry");
-        booleanConfigEntry.setValue(false);
-        assertFalse(booleanConfigEntry.is(String.class));
-    }
-    @Test
-    public void is_boolean_integer() {
-        ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry");
-        booleanConfigEntry.setValue(false);
-        assertFalse(booleanConfigEntry.is(Integer.class));
+        assertTrue("ConfigEntry should be boolean", booleanConfigEntry.is(Boolean.class));
+        assertFalse("ConfigEntry should be boolean, but is string", booleanConfigEntry.is(String.class));
+        assertFalse("ConfigEntry should be boolean, but is integer", booleanConfigEntry.is(Integer.class));
+        assertFalse("ConfigEntry should be boolean, but is language", booleanConfigEntry.is(Language.class));
     }
 
     @Test
     public void is_integer() {
         configEntry.setValue(1023218730);
-        assertTrue(configEntry.is(Integer.class));
-    }
-    @Test
-    public void is_integer_string() {
-        configEntry.setValue(32222222);
-        assertFalse(configEntry.is(String.class));
+        assertTrue("ConfigEntry should be integer", configEntry.is(Integer.class));
+        assertFalse("ConfigEntry should be integer, but is string", configEntry.is(String.class));
+        assertFalse("ConfigEntry should be integer, but is boolean", configEntry.is(Boolean.class));
+        assertFalse("ConfigEntry should be integer, but is language", configEntry.is(Language.class));
     }
 
     @Test
     public void is_string() {
         ConfigEntry<String> stringConfigEntry = new ConfigEntry<>("stringEntry", "aa");
-        assertTrue(stringConfigEntry.is(String.class));
+        assertTrue("ConfigEntry should be string", stringConfigEntry.is(String.class));
+        assertFalse("ConfigEntry should be string, but is integer", stringConfigEntry.is(Integer.class));
+        assertFalse("ConfigEntry should be string, but is boolean", stringConfigEntry.is(Boolean.class));
+        assertFalse("ConfigEntry should be string, but is language", stringConfigEntry.is(Language.class));
     }
 
     @Test()
@@ -132,19 +99,52 @@ public class ConfigEntryTest {
     }
 
     @Test
-    public void validate() {
-        fail("This feature has yet to be implemented");
-        /*configFile.deleteOnExit();
-        configFile.createNewFile();
+    public void validate_integer() {
+        YamlConfiguration yml = mock(YamlConfiguration.class);
+        configEntry.setValue(459539);
 
-        YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
-        String pathInFile = configEntry.getName();
-        int value = 117770;
+        when(yml.isInt(configEntry.getName())).thenReturn(true);
+        assertTrue("should be able to validate integer", configEntry.validate(yml));
+    }
 
-        yml.set((pathInFile == null ? "" : pathInFile), value);
-        yml.save(configFile);
-        configEntry.setValue(value);
+    @Test
+    public void validate_language() {
+        YamlConfiguration yml = mock(YamlConfiguration.class);
+        ConfigEntry<Language> langCE = new ConfigEntry<>("language", Language.ENGLISH);
 
-        assertTrue(configEntry.validate(yml));*/
+        when(yml.isString(langCE.getValue().getId() + "." + langCE.getName())).thenReturn(true);
+        when(yml.isString(Language.POLISH.getId()  + "." + langCE.getName())).thenReturn(true);
+
+        assertTrue("should be able to validate language", langCE.validate(yml));
+    }
+    @Test
+    public void validate_falseLanguage() {
+        YamlConfiguration yml = mock(YamlConfiguration.class);
+        ConfigEntry<Language> langCE = new ConfigEntry<>("language", Language.ENGLISH);
+
+        when(yml.isString(langCE.getValue().getId() + "." + langCE.getName())).thenReturn(true);
+        when(yml.isString(Language.POLISH.getId()  + "." + langCE.getName())).thenReturn(false);
+
+        assertFalse("should be able to validate incorrect language", langCE.validate(yml));
+    }
+
+    @Test
+    public void validate_boolean() {
+        YamlConfiguration yml = mock(YamlConfiguration.class);
+        ConfigEntry<Boolean> booleanCE = new ConfigEntry<>("bool", true);
+
+        when(yml.isBoolean(booleanCE.getName())).thenReturn(true);
+
+        assertTrue("should be able to validate booleans", booleanCE.validate(yml));
+    }
+
+    @Test
+    public void validate_string() {
+        YamlConfiguration yml = mock(YamlConfiguration.class);
+        ConfigEntry<String> stringCE = new ConfigEntry<>("string", "ala");
+
+        when(yml.isBoolean(stringCE.getName())).thenReturn(true);
+
+        assertTrue("should be able to validate booleans", stringCE.validate(yml));
     }
 }

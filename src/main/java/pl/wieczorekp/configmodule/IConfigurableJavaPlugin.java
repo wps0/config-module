@@ -2,6 +2,8 @@ package pl.wieczorekp.configmodule;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
 
 import java.io.File;
@@ -18,7 +20,8 @@ public interface IConfigurableJavaPlugin {
         return _instance;
     }
 
-    static IConfigurableJavaPlugin getInstance(String packageName) {
+    @Nullable
+    static IConfigurableJavaPlugin getInstance(@NotNull String packageName) {
         System.out.println(_instance);
         if (_instance != null && packageName.equals("pl.wieczorekp"))
             return _instance;

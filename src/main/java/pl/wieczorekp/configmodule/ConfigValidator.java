@@ -1,5 +1,7 @@
 package pl.wieczorekp.configmodule;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class ConfigValidator {
-    private static Pattern pathPattern;
+    @Setter @Getter private static Pattern pathPattern;
     private boolean status;
     protected IConfigurableJavaPlugin _rootInstance;
     protected File dataFolder;
@@ -22,6 +24,13 @@ public abstract class ConfigValidator {
     ///////////////////////////////////////////////////////////////////////////
     // public methods
     ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * ToDo: chyba że zamiast tego ConfigFiles walić pobierać typy i ogólnie wszystki z folderu głównego tego pluginu
+     *  i wtedy do konstruktora walnąć, żeby otrzymywał stringa z zoot paczką, w której są config pliki
+     *  zapomniałem co chciałem napisać,  ripek
+     *  dzięki działa
+     */
     protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, File dataFolder, String prefix, @NotNull ConfigFile... files) {
         this._rootInstance = _rootInstance;
         this.dataFolder = dataFolder;
@@ -48,7 +57,6 @@ public abstract class ConfigValidator {
             return true;
 
         for (ConfigFile configFile : configFiles) {
-            // ToDo: usunac te wiadomosci, bo useless ogolnie
             if (!configFile.exists()) {
                 System.out.println(configFile.getName() + " not exists!");
 
