@@ -6,9 +6,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.regex.Pattern;
 
 
@@ -52,10 +49,6 @@ public class ConfigEntry<T> {
         this.value = value;
     }
 
-//    public ConfigEntry(@NotNull String name, Class<T> tClass) throws IllegalAccessException, InstantiationException {
-//        this(name, tClass.newInstance());
-//    }
-
     public ConfigEntry(@NotNull String name) {
         this(name, null);
     }
@@ -98,8 +91,4 @@ public class ConfigEntry<T> {
 
         return object.getTypeName().equalsIgnoreCase(value.getClass().getTypeName());
     }
-
-//    public static <S, U> boolean compare(@NotNull S first, @NotNull U second) {
-//        return first.getClass().getTypeName().equalsIgnoreCase(second.getClass().getTypeName());
-//    }
 }

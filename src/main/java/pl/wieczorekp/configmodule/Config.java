@@ -1,15 +1,8 @@
 package pl.wieczorekp.configmodule;
 
-import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Config extends ConfigValidator {
     private File dataFolder;

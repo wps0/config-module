@@ -143,8 +143,8 @@ public class ConfigEntryTest {
         YamlConfiguration yml = mock(YamlConfiguration.class);
         ConfigEntry<String> stringCE = new ConfigEntry<>("string", "ala");
 
-        when(yml.isBoolean(stringCE.getName())).thenReturn(true);
+        when(yml.isString(stringCE.getName())).thenReturn(true);
 
-        assertTrue("should be able to validate booleans", stringCE.validate(yml));
+        assertTrue("should be able to validate string", stringCE.validate(yml));
     }
 }

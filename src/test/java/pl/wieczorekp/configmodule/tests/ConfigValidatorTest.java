@@ -1,10 +1,13 @@
 package pl.wieczorekp.configmodule.tests;
 
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import pl.wieczorekp.configmodule.*;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
 import static java.io.File.separatorChar;
@@ -52,30 +55,21 @@ public class ConfigValidatorTest {
         //assertTrue(validator.load());
     }
 
-//    @Test
-//    public void revertOriginal() throws IOException {
-//        File file = new File(testPlugin.getDataFolder(), "config");
-//        file.createNewFile();
-//        file.deleteOnExit();
-//        ConfigValidator.revertOriginal(testPlugin.getDataFolder().getAbsolutePath() + separator + "config", testPlugin);
-//
-//        boolean oldf = false, newf = false;
-//        for (File f : testPlugin.getDataFolder().listFiles()) {
-//            if (f.getName().equals("config.old"))
-//                oldf = true;
-//            else if (f.getName().equals("config"))
-//                newf = true;
-//
-//            if (oldf && newf)
-//                break;
-//        }
-//
-//        assertTrue(oldf && newf);
-//    }
-
     @Test
-    public void validateEntry() {
-        fail("This test has yet to be implemented.");
+    public void validateEntry() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        fail("Test does not work as expected.");
+        IConfigurableJavaPlugin mockICJP = mock(IConfigurableJavaPlugin.class);
+        when(mockICJP.getName()).thenReturn("ConfigValidatorTest");
+        //given(IConfigurableJavaPlugin.getInstance("pl.wieczorekp")).willReturn(mockICJP);
+
+        ConfigFile configFile = mock(ConfigFile.class);
+        YamlConfiguration yml = mock(YamlConfiguration.class);
+        ConfigValidator cv = new Config("pl.wieczorekp", configFile);
+        ConfigEntry<String> configEntry = new ConfigEntry<>("stringTest", "stringValue");
+
+        Method method = cv.getClass().getDeclaredMethod("validateEntry",configFile.getClass(), configEntry.getClass(), yml.getClass(), boolean.class);
+        method.invoke(cv, configEntry, configEntry, yml, false);
+
     }
 
     @Test
@@ -117,11 +111,6 @@ public class ConfigValidatorTest {
 
     @Test
     public void revertOriginal() {
-        fail("This test has yet to be implemented.");
-    }
-
-    @Test
-    public void revertOriginal1() {
         fail("Test does not work as expected.");
         String path = System.getProperty("user.dir");
         File old = new File(path + separatorChar + "test.yml.old");

@@ -100,6 +100,7 @@ public abstract class ConfigValidator {
     }
 
     protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml, boolean loadData) {
+        System.out.println("o lol");
         if (!entry.validate(yml)) {
             printError(entry.getName(), ErrorCode.WRONG_VALUE);
             revertOriginal(parent);

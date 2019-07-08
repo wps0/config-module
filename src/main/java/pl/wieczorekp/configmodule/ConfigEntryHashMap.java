@@ -16,15 +16,12 @@ public class ConfigEntryHashMap implements Map {
     private HashMap<Object, ConfigEntry<String>> strings;
     private HashMap<Object, ConfigEntry<Object>> objects;
 
-    private int size;
-
     public ConfigEntryHashMap(@NotNull HashMap<Object, ConfigEntry<Integer>> integers, @NotNull HashMap<Object, ConfigEntry<Boolean>> booleans,
                               @NotNull HashMap<Object, ConfigEntry<String>> strings, @NotNull HashMap<Object, ConfigEntry<Object>> objects) {
         this.integers = integers;
         this.booleans = booleans;
         this.strings = strings;
         this.objects = objects;
-        this.size = integers.size() + booleans.size() + strings.size() + objects.size();
     }
 
     public ConfigEntryHashMap() {
@@ -33,12 +30,12 @@ public class ConfigEntryHashMap implements Map {
 
     @Override
     public int size() {
-        return this.size;
+        return integers.size() + booleans.size() + strings.size() + objects.size();
     }
 
     @Override
     public boolean isEmpty() {
-        return size == 0;
+        return integers.size() + booleans.size() + strings.size() + objects.size() == 0;
     }
 
     @Override
@@ -102,16 +99,13 @@ public class ConfigEntryHashMap implements Map {
         booleans.clear();
         strings.clear();
         objects.clear();
-        this.size = 0;
     }
 
-    @NotNull
     @Override
     public Set keySet() {
         return null;
     }
 
-    @NotNull
     @Override
     public Collection values() {
         return null;
@@ -144,6 +138,7 @@ public class ConfigEntryHashMap implements Map {
         return objects;
     }
 
+    @SafeVarargs
     public static <T> HashMap<Object, ConfigEntry<T>> makeHashMap(ConfigEntry<T>... entries) {
         HashMap<Object, ConfigEntry<T>> map = new HashMap<>();
         for (ConfigEntry<T> entry : entries)
