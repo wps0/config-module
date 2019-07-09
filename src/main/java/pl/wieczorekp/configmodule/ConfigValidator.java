@@ -1,5 +1,6 @@
 package pl.wieczorekp.configmodule;
 
+import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -7,8 +8,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,7 +19,7 @@ public abstract class ConfigValidator {
     protected IConfigurableJavaPlugin _rootInstance;
     protected File dataFolder;
     protected String prefix;
-    protected List<@NotNull ConfigFile> configFiles;
+    protected HashSet<@NotNull ConfigFile> configFiles;
 
     ///////////////////////////////////////////////////////////////////////////
     // public methods
@@ -35,7 +35,7 @@ public abstract class ConfigValidator {
         this._rootInstance = _rootInstance;
         this.dataFolder = dataFolder;
         this.prefix = prefix;
-        this.configFiles = Arrays.asList(files);
+        this.configFiles = Sets.newHashSet(files);
         pathPattern = Pattern.compile(_rootInstance.getName() + "([/\\\\])(.+)");
     }
 
@@ -89,25 +89,29 @@ public abstract class ConfigValidator {
         if (!additionalAfterValidation())
             status = false;
 
-        return status;
+        return !status; //ToDo: temporary!!!!!!!!!!!!!!!!!!!!!!!!
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // protected methods
     ///////////////////////////////////////////////////////////////////////////
     protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml) {
-        validateEntry(parent, entry, yml, true);
+        validateEntry(parent, entry, yml, true, true);
     }
 
-    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml, boolean loadData) {
-        System.out.println("o lol");
+    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml, boolean loadData, boolean revertWhenIncorrect) {
+        boolean validate = true;
         if (!entry.validate(yml)) {
+            validate = false;
             printError(entry.getName(), ErrorCode.WRONG_VALUE);
-            revertOriginal(parent);
-            yml = YamlConfiguration.loadConfiguration(parent);
+
+            if (revertWhenIncorrect) {
+                revertOriginal(parent);
+                yml = YamlConfiguration.loadConfiguration(parent);
+            }
         }
 
-        if (loadData)
+        if (loadData && validate)
             entry.setValue((T) yml.get(entry.getName()));
     }
 

@@ -101,14 +101,26 @@ public class ConfigEntryHashMap implements Map {
         objects.clear();
     }
 
+    @NotNull
     @Override
-    public Set keySet() {
-        return null;
+    public Set<?> keySet() {
+        HashSet<Object> keySet = new HashSet<>();
+        keySet.addAll(integers.keySet());
+        keySet.addAll(booleans.keySet());
+        keySet.addAll(strings.keySet());
+        keySet.addAll(objects.keySet());
+        return keySet;
     }
 
+    @NotNull
     @Override
     public Collection values() {
-        return null;
+        HashSet<ConfigEntry<?>> values = new HashSet<>();
+        values.addAll(integers.values());
+        values.addAll(booleans.values());
+        values.addAll(strings.values());
+        values.addAll(objects.values());
+        return values;
     }
 
     @NotNull

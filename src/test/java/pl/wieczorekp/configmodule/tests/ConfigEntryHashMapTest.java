@@ -48,7 +48,7 @@ public class ConfigEntryHashMapTest {
 
     @Test
     public void get() {
-        map.getBooleans().put("ala", new ConfigEntry<>("boolEntry"));
+        map.getObjects().put("ala", new ConfigEntry<>("objectEntry"));
         assertNotNull("map should return non-null object", map.get("ala"));
     }
 
@@ -59,12 +59,12 @@ public class ConfigEntryHashMapTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void remove() {
-        map.put("ala", "a");
+        map.remove("key");
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void putAll() {
-        map.put("ala", "a");
+        map.putAll(ConfigEntryHashMap.makeHashMap());
     }
 
     @Test
@@ -74,6 +74,7 @@ public class ConfigEntryHashMapTest {
 
     @Test
     public void keySet() {
+        fail("test not yet implemented");
         map.getBooleans().put("ala", new ConfigEntry<>("boolEntry"));
         assertNotNull("ToDo: map should return a set of keys", map.keySet());
     }
@@ -81,12 +82,14 @@ public class ConfigEntryHashMapTest {
     @Test
     public void values() {
         map.getBooleans().put("ala", new ConfigEntry<>("boolEntry"));
+        fail("test not yet implemented");
         assertNotNull("ToDo: map should return a collection of values", map.values());
     }
 
     @Test
     public void entrySet() {
-        fail("ToDo: This test has yet to be implemented");
+        fail("test not yet implemented");
+        assertNotNull("ToDo: map should return a set of keys", map.entrySet());
     }
 
     @Test

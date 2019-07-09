@@ -6,6 +6,7 @@ import org.junit.Test;
 import pl.wieczorekp.configmodule.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
@@ -56,7 +57,7 @@ public class ConfigValidatorTest {
     }
 
     @Test
-    public void validateEntry() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public void validateEntry() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
         fail("Test does not work as expected.");
         IConfigurableJavaPlugin mockICJP = mock(IConfigurableJavaPlugin.class);
         when(mockICJP.getName()).thenReturn("ConfigValidatorTest");
@@ -69,7 +70,6 @@ public class ConfigValidatorTest {
 
         Method method = cv.getClass().getDeclaredMethod("validateEntry",configFile.getClass(), configEntry.getClass(), yml.getClass(), boolean.class);
         method.invoke(cv, configEntry, configEntry, yml, false);
-
     }
 
     @Test

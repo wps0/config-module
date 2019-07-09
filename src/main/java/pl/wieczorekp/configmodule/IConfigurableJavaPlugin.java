@@ -48,7 +48,11 @@ public interface IConfigurableJavaPlugin {
         return null;
     }
 
+    Config getConfigService();
+
+    ///////////////////////////////////////////////////////////////////////////
     // Override some of the JavaPlugin methods
+    ///////////////////////////////////////////////////////////////////////////
     String getName();
 
     File getDataFolder();

@@ -1,15 +1,24 @@
 package pl.wieczorekp.configmodule;
 
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Set;
 
 public class Config extends ConfigValidator {
+    private final FilesystemWatcher fsWatcher;
     private File dataFolder;
     private Language language;
+    private Thread watcherThread;
 
     // ToDo: add databaseUsed variable or sth
-    public Config(@NotNull String packageName, @NotNull ConfigFile... configFiles) {
+    // ToDo: tworzenie pustych directory
+    public Config(@NotNull String packageName, @NotNull ConfigFile... configFiles) throws IOException {
         super(IConfigurableJavaPlugin.getInstance(packageName), configFiles);
         this.dataFolder = _rootInstance.getDataFolder();
         /*if (msgFile == null && _rootInstance.getResource("messages.yml") != null)
@@ -20,12 +29,30 @@ public class Config extends ConfigValidator {
                 System.out.println(str);
             }
         }*/
+        fsWatcher = new FilesystemWatcher();
+        watcherThread = new Thread(fsWatcher);
     }
 
     @Override
     public boolean load() {
+        System.out.println("Loading config...");
         if (!super.load())
             return false;
+
+        try {
+            Thread.sleep(500);
+            fsWatcher.init(dataFolder.toPath());
+            watcherThread.setName(this._rootInstance.getName().replaceAll("\\s", "") + "-ConfigWatcher");
+            watcherThread.start();
+        } catch (IOException | InterruptedException e) {
+            // ToDo: zmienic sposob wyswietlania wiadomosci!!
+            System.out.println("Could not init filesystem watcher! Live config reloading is disabled.");
+            e.printStackTrace();
+            return false;
+        }
+
+
+
         return true;
 
         /*for (ConfigEntry entry : this.configFiles) {
@@ -80,6 +107,39 @@ public class Config extends ConfigValidator {
         }*/
     }
 
+    public void reload(@NotNull Path parent, @NotNull Path child) throws FileNotFoundException {
+        ConfigFile found = null;
+        Path filePath = parent.resolve(child).toAbsolutePath();
+        for (ConfigFile configFile : this.configFiles) {
+
+            if (configFile.getAbsolutePath().equals(filePath.toString())) {
+                System.out.format("wsm to true dla: %s", child.toString());
+                found = configFile;
+                break;
+            }
+        }
+        if (found == null)
+            throw new FileNotFoundException("could not find file with given path");
+        reload(found);
+    }
+
+    public void reload(@NotNull ConfigFile configFile) {
+
+        if (!configFile.canReload())
+            throw new IllegalStateException("cannot reload file as it was reloaded not long ago");
+
+        YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
+        for (ConfigEntry<?> entry : (Set<ConfigEntry<?>>) configFile.getEntries().values())
+            validateEntry(configFile, entry, yml, true, false);
+
+        configFile.updateLastReload();
+    }
+
+    public void cleanup() {
+        if (!watcherThread.isInterrupted())
+            watcherThread.interrupt();
+    }
+
     // ToDo: w config entry name to bedzie sciezka w pliku, a path - sciezka do pliku.
     //  moze jakies enumy da rade ogarnac dla kazdego pliku, ktory ma byc odczytywany czy cos,
 //    public Object getValue(String key) {
@@ -94,6 +154,7 @@ public class Config extends ConfigValidator {
 //        sendMessage(key, destination, null);
 //    }
 //
+//    //ToDo: zmienic z arraydeque na jakies moze "costam... ololzmienna"
 //    public void sendMessage(String key, CommandSender receiver, ArrayDeque<Map.Entry<String, String>> replace) {
 //        String message = getMessage(key);
 //

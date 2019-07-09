@@ -59,9 +59,7 @@ public class ConfigEntry<T> {
      * @return <code>true</code> if only is the value correct, <code>false</code> otherwise.
      */
     public boolean validate(@NotNull YamlConfiguration yml) {
-        if (value == null)
-            return false;
-        if (name == null)
+        if (value == null || name == null) // `name == null` only useful in tests? ToDo: cleanup
             return false;
         System.out.println("Walidacja dla " + value);
 

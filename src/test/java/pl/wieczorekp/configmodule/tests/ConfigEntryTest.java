@@ -3,8 +3,11 @@ package pl.wieczorekp.configmodule.tests;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Before;
 import org.junit.Test;
+import pl.wieczorekp.configmodule.Config;
 import pl.wieczorekp.configmodule.ConfigEntry;
 import pl.wieczorekp.configmodule.Language;
+
+import java.math.BigInteger;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -78,9 +81,16 @@ public class ConfigEntryTest {
         assertFalse("ConfigEntry should be string, but is language", stringConfigEntry.is(Language.class));
     }
 
-    @Test()
+    @Test
     public void is_null() {
         assertFalse(configEntry.is(Integer.class));
+    }
+
+    @Test
+    public void is_bigint() {
+        BigInteger bigInt = new BigInteger("333333333333333333210");
+
+        assertFalse("BigInteger should not be an int", configEntry.is(bigInt.getClass()));
     }
 
     @Test
@@ -146,5 +156,13 @@ public class ConfigEntryTest {
         when(yml.isString(stringCE.getName())).thenReturn(true);
 
         assertTrue("should be able to validate string", stringCE.validate(yml));
+    }
+
+    @Test
+    public void validate_nullValue() {
+        configEntry.setValue(null);
+        YamlConfiguration yml = mock(YamlConfiguration.class);
+
+        assertFalse("ConfigEntry validation should return false when value is null", configEntry.validate(yml));
     }
 }
