@@ -2,7 +2,8 @@ package pl.wieczorekp.configmodule;
 
 public enum Language {
     ENGLISH("en"),
-    POLISH("pl");
+    POLISH("pl"),
+    ANY("en");
 
     private String path;
     Language(String path) {

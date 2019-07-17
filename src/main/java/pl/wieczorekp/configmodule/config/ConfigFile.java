@@ -1,6 +1,7 @@
-package pl.wieczorekp.configmodule;
+package pl.wieczorekp.configmodule.config;
 
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
@@ -13,12 +14,20 @@ public class ConfigFile extends File {
      */
     private static final int reloadTolerance = 1000;
     private long lastReload;
+    @Getter private boolean isMessageFile;
     @Getter private ConfigEntryHashMap entries;
+
 
     public ConfigFile(File parent, String path, ConfigEntryHashMap entries) {
         super(parent, path);
         this.entries = entries;
         this.lastReload = -1;
+        this.isMessageFile = false;
+    }
+
+    public ConfigFile(File parent, @NotNull String child, ConfigEntryHashMap entries, boolean isMessageFile) {
+        this(parent, child, entries);
+        this.isMessageFile = isMessageFile;
     }
 
     public boolean canReload() {

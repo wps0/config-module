@@ -1,9 +1,8 @@
-package pl.wieczorekp.configmodule;
+package pl.wieczorekp.configmodule.config;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 
@@ -39,17 +38,17 @@ public class ConfigEntryHashMap implements Map {
     }
 
     @Override
-    public boolean containsKey(Object key) {
+    public boolean containsKey(@NotNull Object key) {
         return integers.containsKey(key) || booleans.containsKey(key) || strings.containsKey(key) || objects.containsKey(key);
     }
 
     @Override
-    public boolean containsValue(Object value) {
+    public boolean containsValue(@NotNull Object value) {
         return integers.containsValue(value) || booleans.containsValue(value) || strings.containsValue(value) || objects.containsValue(value);
     }
 
     @Override
-    public ConfigEntry<?> get(Object key) {
+    public ConfigEntry<?> get(@NotNull Object key) {
         ConfigEntry<?> result = integers.get(key);
         if (result == null) {
             result = booleans.get(key);
@@ -61,6 +60,11 @@ public class ConfigEntryHashMap implements Map {
         }
         return result;
     }
+
+    public <T> ConfigEntry<T> get(@NotNull String key) {
+        return (ConfigEntry<T>) get((Object) key);
+    }
+
 
     @Nullable
     @Override

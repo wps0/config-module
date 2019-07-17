@@ -5,6 +5,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
+import pl.wieczorekp.configmodule.config.Config;
 
 import java.io.File;
 import java.io.InputStream;
@@ -14,17 +15,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 public interface IConfigurableJavaPlugin {
-    static IConfigurableJavaPlugin _instance = getInstance("pl.wieczorekp");
-
-    static IConfigurableJavaPlugin getInstance() {
-        return _instance;
-    }
-
     @Nullable
     static IConfigurableJavaPlugin getInstance(@NotNull String packageName) {
-        System.out.println(_instance);
-        if (_instance != null && packageName.equals("pl.wieczorekp"))
-            return _instance;
         Reflections reflections = new Reflections(packageName);
 
         Set<Class<? extends JavaPlugin>> subTypes = reflections.getSubTypesOf(JavaPlugin.class);

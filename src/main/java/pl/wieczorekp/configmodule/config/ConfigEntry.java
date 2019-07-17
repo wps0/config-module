@@ -1,11 +1,13 @@
-package pl.wieczorekp.configmodule;
+package pl.wieczorekp.configmodule.config;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import pl.wieczorekp.configmodule.Language;
 
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 
@@ -38,46 +40,48 @@ public class ConfigEntry<T> {
      */
     @Getter @Setter
     private T value;
+    /**
+     * Container for a class type
+     */
+    private Supplier<T> supplier;
+
+    public ConfigEntry(@NotNull String name, @Nullable T value, Supplier<T> type) {
+        this.name = name;
+        this.value = value;
+        this.supplier = type;
+    }
+
+    public ConfigEntry(String name, Supplier<T> supplier) {
+        this(name, null, supplier);
+    }
 
     /**
      *
-     * @param name Path to the property in file.
-     * @param value Value of the property.
-     */
-    public ConfigEntry(@NotNull String name, @Nullable T value) {
-        this.name = name;
-        this.value = value;
-    }
-
-    public ConfigEntry(@NotNull String name) {
-        this(name, null);
-    }
-
-    /**
-     * ToDo: przerobić!!!
      * @param yml
      * @return <code>true</code> if only is the value correct, <code>false</code> otherwise.
      */
     public boolean validate(@NotNull YamlConfiguration yml) {
-        if (value == null || name == null) // `name == null` only useful in tests? ToDo: cleanup
+        if (supplier == null || name == null)
             return false;
-        System.out.println("Walidacja dla " + value);
 
-        Class<T> clazz = (Class<T>) value.getClass();
-        System.out.println(clazz.getTypeName());
-        if (clazz.isInstance(Integer.MAX_VALUE))
-            return yml.isInt(name);
-        if (clazz.isInstance(Boolean.FALSE))
-            return yml.isBoolean(name);
-        if (clazz.isInstance("."))
-            return yml.isString(name);
-        if (clazz.isInstance(Language.POLISH) || clazz.isInstance(Language.ENGLISH)) {
-            for (Language language : Language.values())
-                if (!yml.isString(language.getId() + "." + name))
-                    return false;
-            return true;
+        T val = value;
+
+        try {
+            if (val == null)
+                val = (T) yml.get(name);
+
+            if (supplier.get() instanceof Language) {
+                for (Language language : Language.values())
+                    if (language.getId().equalsIgnoreCase(String.valueOf(val)))
+                        return true;
+                return false;
+            }
+
+            if (val.getClass().isInstance(supplier.get()))
+                return true;
+        } catch (ClassCastException | NullPointerException e) {
+            return false;
         }
-
         return false;
     }
 

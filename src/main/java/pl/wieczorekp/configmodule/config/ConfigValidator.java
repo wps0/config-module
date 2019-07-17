@@ -1,41 +1,53 @@
-package pl.wieczorekp.configmodule;
+package pl.wieczorekp.configmodule.config;
 
-import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
+import pl.wieczorekp.configmodule.IConfigurableJavaPlugin;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class ConfigValidator {
-    @Setter @Getter private static Pattern pathPattern;
+    @Setter @Getter
+    private static Pattern pathPattern;
     private boolean status;
-    protected IConfigurableJavaPlugin _rootInstance;
-    protected File dataFolder;
-    protected String prefix;
-    protected HashSet<@NotNull ConfigFile> configFiles;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // public methods
-    ///////////////////////////////////////////////////////////////////////////
+    protected final IConfigurableJavaPlugin _rootInstance;
+    protected final String prefix;
+    protected final File dataFolder;
+    protected final Logger logger;
+    protected HashSet<ConfigFile> messageFiles;
+    protected HashMap<String, @NotNull ConfigFile> configFiles;
 
     /**
      * ToDo: chyba że zamiast tego ConfigFiles walić pobierać typy i ogólnie wszystki z folderu głównego tego pluginu
      *  i wtedy do konstruktora walnąć, żeby otrzymywał stringa z zoot paczką, w której są config pliki
-     *  zapomniałem co chciałem napisać,  ripek
+     *  zapomniałem co chciałem napisać, ripek
      *  dzięki działa
      */
     protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, File dataFolder, String prefix, @NotNull ConfigFile... files) {
         this._rootInstance = _rootInstance;
         this.dataFolder = dataFolder;
         this.prefix = prefix;
-        this.configFiles = Sets.newHashSet(files);
+        this.configFiles = new HashMap<>();
+        this.messageFiles = new HashSet<>();
+        this.logger = _rootInstance.getLogger();
+        this.status = true;
+
+        for (ConfigFile cf : files) {
+            configFiles.putIfAbsent(cf.getPath(), cf);
+
+            if (cf.isMessageFile())
+                messageFiles.add(cf);
+        }
+
         pathPattern = Pattern.compile(_rootInstance.getName() + "([/\\\\])(.+)");
     }
 
@@ -43,22 +55,19 @@ public abstract class ConfigValidator {
         this(_rootInstance, _rootInstance.getDataFolder(), _rootInstance.getName() + " ", files);
     }
 
-    protected abstract boolean additionalBeforeValidation();
-    protected abstract boolean additionalAfterValidation();
-
-    public boolean load() {
+    ///////////////////////////////////////////////////////////////////////////
+    // public members
+    ///////////////////////////////////////////////////////////////////////////
+    public synchronized boolean load() {
         if (!dataFolder.exists())
             status = dataFolder.mkdir();
-
-        if (!additionalBeforeValidation())
-            status = false;
 
         if (configFiles == null || configFiles.size() == 0)
             return true;
 
-        for (ConfigFile configFile : configFiles) {
+        for (ConfigFile configFile : configFiles.values()) {
             if (!configFile.exists()) {
-                System.out.println(configFile.getName() + " not exists!");
+                logger.config(configFile.getName() + " not exists!");
 
                 String path = getFilePathFromConfig(configFile);
                 if (_rootInstance.getResource(path) == null)
@@ -86,15 +95,39 @@ public abstract class ConfigValidator {
                 validateEntry(configFile, entry.getValue(), yml);
         }
 
-        if (!additionalAfterValidation())
-            status = false;
+        return status;
+    }
 
-        return !status; //ToDo: temporary!!!!!!!!!!!!!!!!!!!!!!!!
+    /**
+     *
+     * @return Relative path to the yml file.
+     */
+    public static String getFilePathFromConfig(ConfigFile configFile) {
+        System.out.println("getFilePathFromConfig input: " + configFile.getPath());
+        Matcher matcher = pathPattern.matcher(configFile.getPath());
+        if (!matcher.find())
+            throw new IllegalArgumentException("could not calculate path to the file");
+        return matcher.group(2);
+    }
+
+    public static void revertOriginal(ConfigFile configFile, IConfigurableJavaPlugin _rootInstance) {
+        System.out.println("revert");
+        File oldFile = new File(configFile.getAbsolutePath()); // ToDo: nie bedzie czasami z .olda bralo?
+        File prevOldFile = new File(configFile.getAbsolutePath() + ".old");
+
+        if (prevOldFile.exists() && !prevOldFile.delete())
+            throw new RuntimeException("cannot delete file " + prevOldFile.getName());
+
+        if (!oldFile.renameTo(prevOldFile))
+            throw new RuntimeException("cannot rename file to " + oldFile.getName());
+
+        _rootInstance.saveResource(getFilePathFromConfig(configFile), false);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // protected methods
+    // protected members
     ///////////////////////////////////////////////////////////////////////////
+
     protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml) {
         validateEntry(parent, entry, yml, true, true);
     }
@@ -106,7 +139,7 @@ public abstract class ConfigValidator {
             printError(entry.getName(), ErrorCode.WRONG_VALUE);
 
             if (revertWhenIncorrect) {
-                revertOriginal(parent);
+                revertOriginal(parent, _rootInstance);
                 yml = YamlConfiguration.loadConfiguration(parent);
             }
         }
@@ -115,7 +148,7 @@ public abstract class ConfigValidator {
             entry.setValue((T) yml.get(entry.getName()));
     }
 
-    protected void printError(String value, ErrorCode code) {
+    protected void printError(@NotNull String value, @NotNull ErrorCode code) {
         StringBuilder sb = new StringBuilder();
         sb.append(value.replaceFirst("(.)", "$1".toUpperCase())).append(" ");
 
@@ -145,41 +178,6 @@ public abstract class ConfigValidator {
             message = "§9[" + this.prefix + "INFO " + code.getError() + "] §b" + sb.toString();
 
         Bukkit.getConsoleSender().sendMessage(message);
-    }
-
-    /**
-     *
-     * @return Relative path to the yml file.
-     */
-    public static String getFilePathFromConfig(ConfigFile configFile) {
-        System.out.println("getFilePathFromConfig input: " + configFile.getPath());
-        Matcher matcher = pathPattern.matcher(configFile.getPath());
-        if (!matcher.find())
-            throw new IllegalArgumentException("could not calculate path to the file");
-        return matcher.group(2);
-    }
-
-//    public static File createFileFromPath(IConfigurableJavaPlugin instance, String path) {
-//        return new File(instance.getDataFolder() + String.valueOf(separatorChar) + path);
-//    }
-
-    public static void revertOriginal(ConfigFile configFile) {
-        revertOriginal(configFile, IConfigurableJavaPlugin.getInstance());
-    }
-
-    public static void revertOriginal(ConfigFile configFile, IConfigurableJavaPlugin _rootInstance) {
-        System.out.println("ha");
-        File oldFile = new File(configFile.getAbsolutePath()); // ToDo: nie bedzie czasami z .olda bralo?
-        File prevOldFile = new File(configFile.getAbsolutePath() + ".old");
-
-        if (prevOldFile.exists() && !prevOldFile.delete())
-            throw new RuntimeException("cannot delete file " + prevOldFile.getName());
-
-        if (!oldFile.renameTo(prevOldFile))
-            throw new RuntimeException("cannot rename file to " + oldFile.getName());
-
-        _rootInstance.saveResource(getFilePathFromConfig(configFile), false);
-
     }
 
     protected enum ErrorCode {

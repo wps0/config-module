@@ -4,6 +4,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import pl.wieczorekp.configmodule.*;
+import pl.wieczorekp.configmodule.config.Config;
+import pl.wieczorekp.configmodule.config.ConfigEntry;
+import pl.wieczorekp.configmodule.config.ConfigFile;
+import pl.wieczorekp.configmodule.config.ConfigValidator;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,7 +70,7 @@ public class ConfigValidatorTest {
         ConfigFile configFile = mock(ConfigFile.class);
         YamlConfiguration yml = mock(YamlConfiguration.class);
         ConfigValidator cv = new Config("pl.wieczorekp", configFile);
-        ConfigEntry<String> configEntry = new ConfigEntry<>("stringTest", "stringValue");
+        ConfigEntry<String> configEntry = new ConfigEntry<>("stringTest", "stringValue", () -> ".");
 
         Method method = cv.getClass().getDeclaredMethod("validateEntry",configFile.getClass(), configEntry.getClass(), yml.getClass(), boolean.class);
         method.invoke(cv, configEntry, configEntry, yml, false);

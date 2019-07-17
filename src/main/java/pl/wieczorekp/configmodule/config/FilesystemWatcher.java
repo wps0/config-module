@@ -1,6 +1,7 @@
-package pl.wieczorekp.configmodule;
+package pl.wieczorekp.configmodule.config;
 
 import org.jetbrains.annotations.NotNull;
+import pl.wieczorekp.configmodule.IConfigurableJavaPlugin;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -8,16 +9,18 @@ import java.nio.file.*;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 public class FilesystemWatcher implements Runnable {
+    private final IConfigurableJavaPlugin instance;
     private WatchService watchService;
     private WatchKey rootWatchKey;
     private Path directory;
 
-    public FilesystemWatcher(WatchService watchService) {
+    public FilesystemWatcher(WatchService watchService, IConfigurableJavaPlugin instance) {
         this.watchService = watchService;
+        this.instance = instance;
     }
 
-    public FilesystemWatcher() throws IOException {
-        this(FileSystems.getDefault().newWatchService());
+    public FilesystemWatcher(IConfigurableJavaPlugin instance) throws IOException {
+        this(FileSystems.getDefault().newWatchService(), instance);
     }
 
     @SuppressWarnings("unchecked")
@@ -44,22 +47,15 @@ public class FilesystemWatcher implements Runnable {
 
         if (rootWatchKey == null)
             throw new IllegalStateException("init method has to be called first");
-        // co jakis czas w main look sprawdzac czy jest interrupt, zeby jak cos mozna bylo sprawnie i szybko
-        //  zakonczyc dzialanie watku
-        //if (Thread.interrupted())
-//            throw new InterruptedException();
-        //    return;
+
         try {
             loop();
         } catch (InterruptedException e) {
-            System.out.println("zepsulo sie na amen, interrupted exception");
-//            e.printStackTrace();
+            instance.getLogger().info("FilesystemWatcher interrupted. Shutting down process...");
         }
     }
 
     private void loop() throws InterruptedException {
-        IConfigurableJavaPlugin instance = IConfigurableJavaPlugin.getInstance();
-
         while (true) {
             WatchKey key = watchService.take();
 
@@ -75,9 +71,9 @@ public class FilesystemWatcher implements Runnable {
                     try {
                         instance.getConfigService().reload(directory, path);
                     } catch (IllegalArgumentException | NullPointerException | IOException e) {
-                        System.out.println("Could not reload! Exception message: " + e.getMessage());
+                        instance.getLogger().warning("Could not reload! Exception message: " + e.getMessage());
                     } catch (IllegalStateException e) {
-                        System.out.println("IllegalStateException: " + e.getMessage());
+                        instance.getLogger().warning("IllegalStateException: " + e.getMessage());
                     }
             }
 

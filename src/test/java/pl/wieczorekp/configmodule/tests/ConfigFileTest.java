@@ -2,8 +2,8 @@ package pl.wieczorekp.configmodule.tests;
 
 import org.junit.Before;
 import org.junit.Test;
-import pl.wieczorekp.configmodule.ConfigEntryHashMap;
-import pl.wieczorekp.configmodule.ConfigFile;
+import pl.wieczorekp.configmodule.config.ConfigEntryHashMap;
+import pl.wieczorekp.configmodule.config.ConfigFile;
 
 import java.io.File;
 

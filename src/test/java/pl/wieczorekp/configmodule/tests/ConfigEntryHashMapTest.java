@@ -2,8 +2,8 @@ package pl.wieczorekp.configmodule.tests;
 
 import org.junit.Before;
 import org.junit.Test;
-import pl.wieczorekp.configmodule.ConfigEntry;
-import pl.wieczorekp.configmodule.ConfigEntryHashMap;
+import pl.wieczorekp.configmodule.config.ConfigEntry;
+import pl.wieczorekp.configmodule.config.ConfigEntryHashMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +21,7 @@ public class ConfigEntryHashMapTest {
     @Test
     public void size() {
         assertEquals("empty map should have 0 size", 0, map.size());
-        map.getBooleans().put("ala", new ConfigEntry<>("boolEntry"));
+        map.getBooleans().put("ala", new ConfigEntry<>("boolEntry", () -> true));
         assertEquals("map should have 1 size", 1, map.size());
     }
 
@@ -32,23 +32,23 @@ public class ConfigEntryHashMapTest {
 
     @Test
     public void containsKey() {
-        map.getStrings().put("ala", new ConfigEntry<>("string"));
+        map.getStrings().put("ala", new ConfigEntry<>("string", () -> "."));
         assertTrue("map should contain specified key", map.containsKey("ala"));
         assertFalse("map should not contain specified key", map.containsKey("kot"));
     }
 
     @Test
     public void containsValue() {
-        ConfigEntry<Integer> anInt = new ConfigEntry<>("int");
+        ConfigEntry<Integer> anInt = new ConfigEntry<>("int", () -> 1);
         map.getIntegers().put("int", anInt);
         assertTrue("map should contain object added before", map.containsValue(anInt));
-        assertFalse("map should contain object created now with the same value", map.containsValue(new ConfigEntry<>("int")));
+        assertFalse("map should contain object created now with the same value", map.containsValue(new ConfigEntry<>("int", () -> 1)));
         assertFalse("map should not contain random object", map.containsValue("ala"));
     }
 
     @Test
     public void get() {
-        map.getObjects().put("ala", new ConfigEntry<>("objectEntry"));
+        map.getObjects().put("ala", new ConfigEntry<>("objectEntry", () -> 1));
         assertNotNull("map should return non-null object", map.get("ala"));
     }
 
@@ -75,13 +75,13 @@ public class ConfigEntryHashMapTest {
     @Test
     public void keySet() {
         fail("test not yet implemented");
-        map.getBooleans().put("ala", new ConfigEntry<>("boolEntry"));
+        map.getBooleans().put("ala", new ConfigEntry<>("boolEntry", () -> true));
         assertNotNull("ToDo: map should return a set of keys", map.keySet());
     }
 
     @Test
     public void values() {
-        map.getBooleans().put("ala", new ConfigEntry<>("boolEntry"));
+        map.getBooleans().put("ala", new ConfigEntry<>("boolEntry", () -> true));
         fail("test not yet implemented");
         assertNotNull("ToDo: map should return a collection of values", map.values());
     }
@@ -114,7 +114,7 @@ public class ConfigEntryHashMapTest {
 
     @Test
     public void makeHashMap() {
-        HashMap<Object, ConfigEntry<Object>> resultMap = ConfigEntryHashMap.makeHashMap(new ConfigEntry<>("Ala", "Makota"));
+        HashMap<Object, ConfigEntry<Object>> resultMap = ConfigEntryHashMap.makeHashMap(new ConfigEntry<>("Ala", "Makota", () -> "."));
         assertEquals("returned HashMap should contain created before Entry object", "Makota", resultMap.get("Ala").getValue());
     }
 }

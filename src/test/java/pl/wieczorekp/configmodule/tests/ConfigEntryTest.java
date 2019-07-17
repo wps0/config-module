@@ -3,8 +3,7 @@ package pl.wieczorekp.configmodule.tests;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Before;
 import org.junit.Test;
-import pl.wieczorekp.configmodule.Config;
-import pl.wieczorekp.configmodule.ConfigEntry;
+import pl.wieczorekp.configmodule.config.ConfigEntry;
 import pl.wieczorekp.configmodule.Language;
 
 import java.math.BigInteger;
@@ -18,7 +17,7 @@ public class ConfigEntryTest {
 
     @Before
     public void setUp() {
-        configEntry = new ConfigEntry<>("randomInt");
+        configEntry = new ConfigEntry<>("randomInt", () -> 1);
     }
 
     @Test
@@ -45,7 +44,7 @@ public class ConfigEntryTest {
 
     @Test
     public void is_language() {
-        ConfigEntry<Language> languageConfigEntry = new ConfigEntry<>("lang");
+        ConfigEntry<Language> languageConfigEntry = new ConfigEntry<>("lang", () -> Language.ENGLISH);
         languageConfigEntry.setValue(Language.ENGLISH);
         assertTrue("ConfigEntry should be language", languageConfigEntry.is(Language.class));
         assertFalse("ConfigEntry should be language, but is string", languageConfigEntry.is(String.class));
@@ -55,7 +54,7 @@ public class ConfigEntryTest {
 
     @Test
     public void is_boolean() {
-        ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry");
+        ConfigEntry<Boolean> booleanConfigEntry = new ConfigEntry<>("boolEntry", () -> Boolean.TRUE);
         booleanConfigEntry.setValue(false);
         assertTrue("ConfigEntry should be boolean", booleanConfigEntry.is(Boolean.class));
         assertFalse("ConfigEntry should be boolean, but is string", booleanConfigEntry.is(String.class));
@@ -74,7 +73,7 @@ public class ConfigEntryTest {
 
     @Test
     public void is_string() {
-        ConfigEntry<String> stringConfigEntry = new ConfigEntry<>("stringEntry", "aa");
+        ConfigEntry<String> stringConfigEntry = new ConfigEntry<>("stringEntry", () -> ".");
         assertTrue("ConfigEntry should be string", stringConfigEntry.is(String.class));
         assertFalse("ConfigEntry should be string, but is integer", stringConfigEntry.is(Integer.class));
         assertFalse("ConfigEntry should be string, but is boolean", stringConfigEntry.is(Boolean.class));
@@ -99,12 +98,12 @@ public class ConfigEntryTest {
     }
     @Test
     public void getPathInFile_notNull() {
-        configEntry = new ConfigEntry<>("AlaMaKota", 2);
+        configEntry = new ConfigEntry<>("AlaMaKota", () -> 1);
         assertEquals("AlaMaKota", configEntry.getName());
     }
     @Test
     public void getPathInFile_multi() {
-        configEntry = new ConfigEntry<>("super.secret.list.string3");
+        configEntry = new ConfigEntry<>("super.secret.list.string3", () -> 2);
         assertEquals("super.secret.list.string3", configEntry.getName());
     }
 
@@ -120,7 +119,7 @@ public class ConfigEntryTest {
     @Test
     public void validate_language() {
         YamlConfiguration yml = mock(YamlConfiguration.class);
-        ConfigEntry<Language> langCE = new ConfigEntry<>("language", Language.ENGLISH);
+        ConfigEntry<Language> langCE = new ConfigEntry<>("language", Language.ENGLISH, () -> Language.ENGLISH);
 
         when(yml.isString(langCE.getValue().getId() + "." + langCE.getName())).thenReturn(true);
         when(yml.isString(Language.POLISH.getId()  + "." + langCE.getName())).thenReturn(true);
@@ -130,7 +129,7 @@ public class ConfigEntryTest {
     @Test
     public void validate_falseLanguage() {
         YamlConfiguration yml = mock(YamlConfiguration.class);
-        ConfigEntry<Language> langCE = new ConfigEntry<>("language", Language.ENGLISH);
+        ConfigEntry<Language> langCE = new ConfigEntry<>("language", Language.ENGLISH, () -> Language.ENGLISH);
 
         when(yml.isString(langCE.getValue().getId() + "." + langCE.getName())).thenReturn(true);
         when(yml.isString(Language.POLISH.getId()  + "." + langCE.getName())).thenReturn(false);
@@ -141,7 +140,7 @@ public class ConfigEntryTest {
     @Test
     public void validate_boolean() {
         YamlConfiguration yml = mock(YamlConfiguration.class);
-        ConfigEntry<Boolean> booleanCE = new ConfigEntry<>("bool", true);
+        ConfigEntry<Boolean> booleanCE = new ConfigEntry<>("bool", () -> true);
 
         when(yml.isBoolean(booleanCE.getName())).thenReturn(true);
 
@@ -151,7 +150,7 @@ public class ConfigEntryTest {
     @Test
     public void validate_string() {
         YamlConfiguration yml = mock(YamlConfiguration.class);
-        ConfigEntry<String> stringCE = new ConfigEntry<>("string", "ala");
+        ConfigEntry<String> stringCE = new ConfigEntry<>("string", "ala", () -> ".");
 
         when(yml.isString(stringCE.getName())).thenReturn(true);
 
