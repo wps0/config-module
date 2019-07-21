@@ -5,9 +5,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
-/**
- * ToDo: dynamicznie dodawanie do entries.
- */
 public class ConfigFile extends File {
     /**
      * The minimum delay between file reloads.

@@ -64,7 +64,7 @@ public class FilesystemWatcher implements Runnable {
                 if (watchEvent.kind() == OVERFLOW)
                     continue;
 
-                // ToDo: obsługa może delete i create
+                // ToDo: obsługa może delete i create (dynamiczne dodawanie i usuwanie z entries danego ConfigFile)
 
                 Path path = (Path) watchEvent.context();
                 if (watchEvent.kind() == ENTRY_MODIFY)

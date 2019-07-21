@@ -1,4 +1,4 @@
-package pl.wieczorekp.configmodule.tests;
+package pl.wieczorekp.configmodule.tests.config;
 
 import org.junit.Before;
 import org.junit.Test;

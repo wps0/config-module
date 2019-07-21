@@ -6,17 +6,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 
-/**
- * ToDo: migrate to Map interface (not HashMap)
- */
 public class ConfigEntryHashMap implements Map {
-    private HashMap<Object, ConfigEntry<Integer>> integers;
-    private HashMap<Object, ConfigEntry<Boolean>> booleans;
-    private HashMap<Object, ConfigEntry<String>> strings;
-    private HashMap<Object, ConfigEntry<Object>> objects;
+    private Map<Object, ConfigEntry<Integer>> integers;
+    private Map<Object, ConfigEntry<Boolean>> booleans;
+    private Map<Object, ConfigEntry<String>> strings;
+    private Map<Object, ConfigEntry<Object>> objects;
 
-    public ConfigEntryHashMap(@NotNull HashMap<Object, ConfigEntry<Integer>> integers, @NotNull HashMap<Object, ConfigEntry<Boolean>> booleans,
-                              @NotNull HashMap<Object, ConfigEntry<String>> strings, @NotNull HashMap<Object, ConfigEntry<Object>> objects) {
+    public ConfigEntryHashMap(@NotNull Map<Object, ConfigEntry<Integer>> integers, @NotNull Map<Object, ConfigEntry<Boolean>> booleans,
+                              @NotNull Map<Object, ConfigEntry<String>> strings, @NotNull Map<Object, ConfigEntry<Object>> objects) {
         this.integers = integers;
         this.booleans = booleans;
         this.strings = strings;
@@ -138,19 +135,19 @@ public class ConfigEntryHashMap implements Map {
         return entrySet;
     }
 
-    public HashMap<Object, ConfigEntry<Integer>> getIntegers() {
+    public Map<Object, ConfigEntry<Integer>> getIntegers() {
         return integers;
     }
 
-    public HashMap<Object, ConfigEntry<Boolean>> getBooleans() {
+    public Map<Object, ConfigEntry<Boolean>> getBooleans() {
         return booleans;
     }
 
-    public HashMap<Object, ConfigEntry<String>> getStrings() {
+    public Map<Object, ConfigEntry<String>> getStrings() {
         return strings;
     }
 
-    public HashMap<Object, ConfigEntry<Object>> getObjects() {
+    public Map<Object, ConfigEntry<Object>> getObjects() {
         return objects;
     }
 

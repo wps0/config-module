@@ -34,7 +34,7 @@ public class Config extends ConfigValidator {
 
     @Override
     public boolean load() {
-        System.out.println("Loading config...");
+        logger.info("Loading config...");
         if (!super.load())
             return false;
 
@@ -74,11 +74,10 @@ public class Config extends ConfigValidator {
     public void reload(@NotNull Path parent, @NotNull Path child) throws FileNotFoundException {
         ConfigFile found = null;
         Path filePath = parent.resolve(child).toAbsolutePath();
+
         synchronized (this) {
             for (ConfigFile configFile : configFiles.values()) {
-
                 if (configFile.getAbsolutePath().equals(filePath.toString())) {
-                    System.out.format("wsm to true dla: %s", child.toString());
                     found = configFile;
                     break;
                 }
@@ -90,6 +89,7 @@ public class Config extends ConfigValidator {
     }
 
     public void reload(@NotNull ConfigFile configFile) {
+        _rootInstance.getLogger().info("Reloading file " + configFile.getPath() + "...");
         if (!configFile.canReload())
             throw new IllegalStateException("cannot reload file as it was reloaded not long ago");
 

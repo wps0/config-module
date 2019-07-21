@@ -1,4 +1,4 @@
-package pl.wieczorekp.configmodule.tests;
+package pl.wieczorekp.configmodule.tests.config;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Before;
