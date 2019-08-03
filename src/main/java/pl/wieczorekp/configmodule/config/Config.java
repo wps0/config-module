@@ -17,19 +17,33 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 
+// ToDo: chyba że jakoś annotations dodawać tam, gdzie problem jest z czmyś do rozwiązania w normalny sposób, np. przy tych typach w config entry
+//      czy coś
+
 public class Config extends ConfigValidator {
     private final FilesystemWatcher fsWatcher;
     @Setter @Getter
     private Language language;
     private Thread watcherThread;
+    private boolean usePrefix;
 
     // ToDo: add databaseUsed variable or sth
     // ToDo: tworzenie pustych directory
     public Config(@NotNull String packageName, @NotNull ConfigFile... configFiles) throws IOException {
-        super(IConfigurableJavaPlugin.getInstance(packageName), configFiles);
+        this(true, packageName, configFiles);
+    }
+
+    public Config(boolean usePrefix, @NotNull IConfigurableJavaPlugin mainPluginClass, @NotNull ConfigFile... configFiles) throws IOException {
+        super(mainPluginClass, configFiles);
+        this.usePrefix = usePrefix;
         this.language = Language.ENGLISH;
         this.fsWatcher = new FilesystemWatcher(_rootInstance);
         this.watcherThread = new Thread(this.fsWatcher);
+    }
+
+    @Deprecated
+    public Config(boolean usePrefix, @NotNull String packageName, @NotNull ConfigFile... configFiles) throws IOException {
+        this(usePrefix, IConfigurableJavaPlugin.getInstance(packageName), configFiles);
     }
 
     @Override
@@ -47,8 +61,8 @@ public class Config extends ConfigValidator {
 
         try {
             Thread.sleep(500);
-            fsWatcher.init(dataFolder.toPath());
-            watcherThread.setName(this._rootInstance.getName().replaceAll("\\s", "") + "-ConfigWatcher");
+            fsWatcher.init(_rootInstance.getDataFolder().toPath());
+            watcherThread.setName(_rootInstance.getName().replaceAll("\\s", "") + "-ConfigWatcher");
             watcherThread.start();
         } catch (IOException | InterruptedException e) {
             // ToDo: zmienic sposob wyswietlania wiadomosci!!
@@ -95,8 +109,13 @@ public class Config extends ConfigValidator {
 
         synchronized (this) {
             YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
-            for (ConfigEntry<?> entry : (Set<ConfigEntry<?>>) configFile.getEntries().values())
-                validateEntry(configFile, entry, yml, true, false);
+            for (ConfigEntry<?> entry : (Set<ConfigEntry<?>>) configFile.getEntries().values()) {
+                try {
+                    validateEntry(configFile, entry, yml, true, false);
+                } catch (IOException e) {
+                    logger.warning("Wrong value for " + entry.getName() + ". Cannot delete/rename file.");
+                }
+            }
 
             configFile.updateLastReload();
         }
@@ -129,22 +148,18 @@ public class Config extends ConfigValidator {
     }
 
     public void sendMessage(@NotNull CommandSender receiver, @NotNull String key, ReplaceEntry... replace) {
+        StringBuilder sb = new StringBuilder(usePrefix ? prefix + " " : "");
         String message = getMessage(key);
 
-        if (message == null) {
-            receiver.sendMessage(ChatColor.RED + "Unknown message");
-            return;
-        }
+        if (message == null)
+            sb.append(ChatColor.RED).append("Unknown message");
 
-        message = message.replace('&', ChatColor.COLOR_CHAR);
-        if (replace == null) {
-            receiver.sendMessage(message);
-            return;
-        }
+        if (replace != null && message != null)
+            for (ReplaceEntry replaceEntry : replace)
+                message = message.replace(replaceEntry.getKey(), replaceEntry.getValue());
 
-        for (ReplaceEntry replaceEntry : replace)
-            message = message.replace(replaceEntry.getKey(), replaceEntry.getValue());
+        sb.append(message);
 
-        receiver.sendMessage(message);
+        receiver.sendMessage(sb.toString().replace('&', ChatColor.COLOR_CHAR));
     }
 }

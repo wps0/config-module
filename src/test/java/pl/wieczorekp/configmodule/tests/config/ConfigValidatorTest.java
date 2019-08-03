@@ -127,7 +127,11 @@ public class ConfigValidatorTest {
         when(configFile.renameTo(old)).thenReturn(true);
 
         IConfigurableJavaPlugin mockICJP = mock(IConfigurableJavaPlugin.class);
-        ConfigValidator.revertOriginal(configFile, mockICJP);
+        try {
+            ConfigValidator.revertOriginal(configFile, mockICJP);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test

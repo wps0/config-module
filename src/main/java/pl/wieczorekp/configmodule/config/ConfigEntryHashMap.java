@@ -62,7 +62,6 @@ public class ConfigEntryHashMap implements Map {
         return (ConfigEntry<T>) get((Object) key);
     }
 
-
     @Nullable
     @Override
     public Object put(Object key, Object value) {
@@ -152,7 +151,9 @@ public class ConfigEntryHashMap implements Map {
     }
 
     @SafeVarargs
-    public static <T> HashMap<Object, ConfigEntry<T>> makeHashMap(ConfigEntry<T>... entries) {
+    @NotNull
+    @Deprecated
+    public static <T> HashMap<Object, ConfigEntry<T>> makeHashMap(@NotNull ConfigEntry<T>... entries) {
         HashMap<Object, ConfigEntry<T>> map = new HashMap<>();
         for (ConfigEntry<T> entry : entries)
             map.put(entry.getName(), entry);

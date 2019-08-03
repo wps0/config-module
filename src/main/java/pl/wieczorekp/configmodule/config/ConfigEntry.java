@@ -10,10 +10,9 @@ import pl.wieczorekp.configmodule.Language;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-
 /**
  * <p>
- *     A single configuration property. <br />
+ *     A single configuration property. <br>
  *     ToDo: Tied up with {@link FilesystemWatcher FilesystemWatcher} allows of dynamic refresh of value field
  *      add flag 'dynamic refresh' or sth. jesli tak, to za kazda zmiana sle do pluginu sygnal, zeby odswierzyc. moze bez sensu to jest? w sumie zjada tylko resource.
  *      domyslnie na false niech
@@ -56,9 +55,13 @@ public class ConfigEntry<T> {
     }
 
     /**
+     * Validates this {@link ConfigEntry ConfigEntry}.
      *
-     * @param yml
+     * @param yml The {@link YamlConfiguration YamlConfiguration} containing this ConfigEntry
      * @return <code>true</code> if only is the value correct, <code>false</code> otherwise.
+     *
+     * @see YamlConfiguration
+     * @see ConfigEntry
      */
     public boolean validate(@NotNull YamlConfiguration yml) {
         if (supplier == null || name == null)

@@ -5,6 +5,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 import pl.wieczorekp.configmodule.config.Config;
 
 import java.io.File;
@@ -16,8 +17,11 @@ import java.util.logging.Logger;
 
 public interface IConfigurableJavaPlugin {
     @Nullable
+    @Deprecated
     static IConfigurableJavaPlugin getInstance(@NotNull String packageName) {
-        Reflections reflections = new Reflections(packageName);
+        Reflections reflections = new Reflections(packageName, new SubTypesScanner());
+
+        System.out.println("searching JavaPlugin in package " + packageName);
 
         Set<Class<? extends JavaPlugin>> subTypes = reflections.getSubTypesOf(JavaPlugin.class);
         Iterator<Class<? extends JavaPlugin>> iterator = subTypes.iterator();
@@ -39,6 +43,8 @@ public interface IConfigurableJavaPlugin {
         System.out.println("null!");
         return null;
     }
+
+    IConfigurableJavaPlugin getInstance();
 
     Config getConfigService();
 

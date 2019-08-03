@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import pl.wieczorekp.configmodule.IConfigurableJavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,20 +22,19 @@ public abstract class ConfigValidator {
     private boolean status;
     protected final IConfigurableJavaPlugin _rootInstance;
     protected final String prefix;
-    protected final File dataFolder;
     protected final Logger logger;
     protected HashSet<ConfigFile> messageFiles;
     protected HashMap<String, @NotNull ConfigFile> configFiles;
 
-    /**
+    /*
      * ToDo: chyba że zamiast tego ConfigFiles walić pobierać typy i ogólnie wszystki z folderu głównego tego pluginu
      *  i wtedy do konstruktora walnąć, żeby otrzymywał stringa z zoot paczką, w której są config pliki
      *  zapomniałem co chciałem napisać, ripek
      *  dzięki działa
      */
-    protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, File dataFolder, String prefix, @NotNull ConfigFile... files) {
+    @Deprecated
+    protected ConfigValidator(@NotNull IConfigurableJavaPlugin _rootInstance, File dataFolder, String prefix, @NotNull ConfigFile... files) {
         this._rootInstance = _rootInstance;
-        this.dataFolder = dataFolder;
         this.prefix = prefix;
         this.configFiles = new HashMap<>();
         this.messageFiles = new HashSet<>();
@@ -51,16 +51,34 @@ public abstract class ConfigValidator {
         pathPattern = Pattern.compile(_rootInstance.getName() + "([/\\\\])(.+)");
     }
 
-    protected ConfigValidator(IConfigurableJavaPlugin _rootInstance, @NotNull ConfigFile... files) {
-        this(_rootInstance, _rootInstance.getDataFolder(), _rootInstance.getName() + " ", files);
+    protected ConfigValidator(@NotNull IConfigurableJavaPlugin _rootInstance, String prefix, @NotNull ConfigFile... files) {
+        this._rootInstance = _rootInstance;
+        this.prefix = prefix;
+        this.configFiles = new HashMap<>();
+        this.messageFiles = new HashSet<>();
+        this.logger = _rootInstance.getLogger();
+        this.status = true;
+
+        for (ConfigFile cf : files) {
+            configFiles.putIfAbsent(cf.getPath(), cf);
+
+            if (cf.isMessageFile())
+                messageFiles.add(cf);
+        }
+
+        pathPattern = Pattern.compile(_rootInstance.getName() + "([/\\\\])(.+)");
+    }
+
+    protected ConfigValidator(@NotNull IConfigurableJavaPlugin _rootInstance, @NotNull ConfigFile... files) {
+        this(_rootInstance, _rootInstance.getName() + " ", files);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // public members
     ///////////////////////////////////////////////////////////////////////////
     public synchronized boolean load() {
-        if (!dataFolder.exists())
-            status = dataFolder.mkdir();
+        if (!_rootInstance.getDataFolder().exists())
+            status = _rootInstance.getDataFolder().mkdir();
 
         if (configFiles == null || configFiles.size() == 0)
             return true;
@@ -83,26 +101,44 @@ public abstract class ConfigValidator {
 
             YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
             for (Map.Entry<Object, ConfigEntry<Integer>> entry : configFile.getEntries().getIntegers().entrySet())
-                validateEntry(configFile, entry.getValue(), yml);
+                try {
+                    validateEntry(configFile, entry.getValue(), yml);
+                } catch (IOException e) {
+                    logger.warning("IOException (problem with deleting/renaming file) " + configFile.getAbsolutePath());
+                }
 
             for (Map.Entry<Object, ConfigEntry<Boolean>> entry : configFile.getEntries().getBooleans().entrySet())
-                validateEntry(configFile, entry.getValue(), yml);
+                try {
+                    validateEntry(configFile, entry.getValue(), yml);
+                } catch (IOException e) {
+                    logger.warning("IOException (problem with deleting/renaming file) " + configFile.getAbsolutePath());
+                }
 
             for (Map.Entry<Object, ConfigEntry<String>> entry : configFile.getEntries().getStrings().entrySet())
-                validateEntry(configFile, entry.getValue(), yml);
+                try {
+                    validateEntry(configFile, entry.getValue(), yml);
+                } catch (IOException e) {
+                    logger.warning("IOException (problem with deleting/renaming file) " + configFile.getAbsolutePath());
+                }
 
             for (Map.Entry<Object, ConfigEntry<Object>> entry : configFile.getEntries().getObjects().entrySet())
-                validateEntry(configFile, entry.getValue(), yml);
+                try {
+                    validateEntry(configFile, entry.getValue(), yml);
+                } catch (IOException e) {
+                    logger.warning("IOException (problem with deleting/renaming file) " + configFile.getAbsolutePath());
+                }
         }
 
         return status;
     }
 
     /**
+     * Resolves absolute path of given configFile to the relative one.
      *
+     * @param configFile Config file to which path should be returned.
      * @return Relative path to the yml file.
      */
-    public static String getFilePathFromConfig(ConfigFile configFile) {
+    public static String getFilePathFromConfig(File configFile) {
         System.out.println("getFilePathFromConfig input: " + configFile.getPath());
         Matcher matcher = pathPattern.matcher(configFile.getPath());
         if (!matcher.find())
@@ -110,16 +146,22 @@ public abstract class ConfigValidator {
         return matcher.group(2);
     }
 
-    public static void revertOriginal(ConfigFile configFile, IConfigurableJavaPlugin _rootInstance) {
+    /**
+     * @param configFile file to be reverted
+     * @param _rootInstance instance of the {@link IConfigurableJavaPlugin}
+     *
+     * @throws IOException when one of the file operations failed (delete/rename)
+     */
+    public static void revertOriginal(@NotNull ConfigFile configFile, IConfigurableJavaPlugin _rootInstance) throws IOException {
         System.out.println("revert");
         File oldFile = new File(configFile.getAbsolutePath()); // ToDo: nie bedzie czasami z .olda bralo?
         File prevOldFile = new File(configFile.getAbsolutePath() + ".old");
 
         if (prevOldFile.exists() && !prevOldFile.delete())
-            throw new RuntimeException("cannot delete file " + prevOldFile.getName());
+            throw new IOException("cannot delete file " + prevOldFile.getName());
 
         if (!oldFile.renameTo(prevOldFile))
-            throw new RuntimeException("cannot rename file to " + oldFile.getName());
+            throw new IOException("cannot rename file to " + oldFile.getName());
 
         _rootInstance.saveResource(getFilePathFromConfig(configFile), false);
     }
@@ -128,11 +170,11 @@ public abstract class ConfigValidator {
     // protected members
     ///////////////////////////////////////////////////////////////////////////
 
-    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml) {
+    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml) throws IOException {
         validateEntry(parent, entry, yml, true, true);
     }
 
-    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml, boolean loadData, boolean revertWhenIncorrect) {
+    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml, boolean loadData, boolean revertWhenIncorrect) throws IOException {
         boolean validate = true;
         if (!entry.validate(yml)) {
             validate = false;

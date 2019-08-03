@@ -1,5 +1,7 @@
 package pl.wieczorekp.configmodule;
 
+import org.jetbrains.annotations.Nullable;
+
 public enum Language {
     ENGLISH("en"),
     POLISH("pl"),
@@ -17,6 +19,7 @@ public enum Language {
         return path + ".";
     }
 
+    @Nullable
     public static Language fromStringCode(String str) {
         for (Language lang : Language.values() ) {
             if (lang.getId().equalsIgnoreCase(str))
