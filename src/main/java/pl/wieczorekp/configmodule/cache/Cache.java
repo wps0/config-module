@@ -10,12 +10,12 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface Cache<K, V> {
     /**
-     * Adds specified value to be accessible (via {@link #lookup(K)} method) using given key.
+     * Adds specified value to be accessible (via {@link #lookup(Object)} method) using given key.
      *
      * @param key Key under which given value will be available
      * @param value Value
      *
-     * @see #lookup(K)
+     * @see #lookup(Object)
      */
     void insert(@NotNull K key, @NotNull V value);
 
@@ -25,7 +25,7 @@ public interface Cache<K, V> {
      * @param key Key under which value should be searched.
      * @return Value in the cache available under specified key or null, if value not found.
      *
-     * @see #insert(K, V)
+     * @see #insert(Object, Object)
      */
     V lookup(@NotNull K key);
 
