@@ -1,12 +1,12 @@
 package pl.wieczorekp.configmodule.config;
 
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.wieczorekp.configmodule.Language;
 
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -23,21 +23,19 @@ import java.util.regex.Pattern;
  * @param <T> Type of the value stored.
  * @version 1.0
  */
-public class ConfigEntry<T> {
+public class ConfigEntry<T> implements Map.Entry<String, T> {
     /**
      * The compiled pattern used in detecting path in file.
      */
     @Getter private final static Pattern pathInFilePattern = Pattern.compile("(.*)(.*)");
-
     /**
      * The path to the property in the file.
      */
     @Getter private String name;
-
     /**
      * The value of the held property.
      */
-    @Getter @Setter
+    @Getter
     private T value;
     /**
      * Container for a class type
@@ -95,5 +93,17 @@ public class ConfigEntry<T> {
             return false;
 
         return object.getTypeName().equalsIgnoreCase(value.getClass().getTypeName());
+    }
+
+    @Override
+    public String getKey() {
+        return name;
+    }
+
+    @Override
+    public T setValue(T value) {
+        this.value = value;
+        // ToDo: zmienić, żeby wywalało kopie
+        return null;
     }
 }

@@ -26,6 +26,15 @@ public class HashMapFactory {
 
     @SafeVarargs
     @NotNull
+    public static <K, V> HashMap<K, V> getHashMap(Map.Entry<K, V>... entries) {
+        HashMap<K, V> map = new HashMap<>();
+        for (Map.Entry<K, V> entry : entries)
+            map.put(entry.getKey(), entry.getValue());
+        return map;
+    }
+
+    @SafeVarargs
+    @NotNull
     @Deprecated
     public static <T> HashMap<Object, ConfigEntry<T>> makeHashMap(ConfigEntry<T>... entries) {
         HashMap<Object, ConfigEntry<T>> map = new HashMap<>();

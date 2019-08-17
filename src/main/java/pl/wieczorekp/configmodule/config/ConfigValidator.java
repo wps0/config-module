@@ -1,29 +1,21 @@
 package pl.wieczorekp.configmodule.config;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import pl.wieczorekp.configmodule.IConfigurableJavaPlugin;
+import pl.wieczorekp.configmodule.utils.ConfigUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public abstract class ConfigValidator {
-    @Setter @Getter
-    private static Pattern pathPattern;
-    private boolean status;
-    protected final IConfigurableJavaPlugin _rootInstance;
+    protected final IConfigurableJavaPlugin plugin;
+
     protected final String prefix;
     protected final Logger logger;
-    protected HashSet<ConfigFile> messageFiles;
+    protected Set<ConfigFile> messageFiles;
     protected HashMap<String, @NotNull ConfigFile> configFiles;
 
     /*
@@ -32,118 +24,52 @@ public abstract class ConfigValidator {
      *  zapomniałem co chciałem napisać, ripek
      *  dzięki działa
      */
-    @Deprecated
-    protected ConfigValidator(@NotNull IConfigurableJavaPlugin _rootInstance, File dataFolder, String prefix, @NotNull ConfigFile... files) {
-        this._rootInstance = _rootInstance;
+    protected ConfigValidator(@NotNull IConfigurableJavaPlugin plugin, String prefix, @NotNull ConfigFile... files) {
+        this.plugin = plugin;
         this.prefix = prefix;
         this.configFiles = new HashMap<>();
         this.messageFiles = new HashSet<>();
-        this.logger = _rootInstance.getLogger();
-        this.status = true;
+        this.logger = plugin.getLogger();
 
         for (ConfigFile cf : files) {
             configFiles.putIfAbsent(cf.getPath(), cf);
 
-            if (cf.isMessageFile())
+            if (cf.isMessageFile()) {
                 messageFiles.add(cf);
+            }
         }
-
-        pathPattern = Pattern.compile(_rootInstance.getName() + "([/\\\\])(.+)");
     }
 
-    protected ConfigValidator(@NotNull IConfigurableJavaPlugin _rootInstance, String prefix, @NotNull ConfigFile... files) {
-        this._rootInstance = _rootInstance;
-        this.prefix = prefix;
-        this.configFiles = new HashMap<>();
-        this.messageFiles = new HashSet<>();
-        this.logger = _rootInstance.getLogger();
-        this.status = true;
-
-        for (ConfigFile cf : files) {
-            configFiles.putIfAbsent(cf.getPath(), cf);
-
-            if (cf.isMessageFile())
-                messageFiles.add(cf);
-        }
-
-        pathPattern = Pattern.compile(_rootInstance.getName() + "([/\\\\])(.+)");
+    protected ConfigValidator(@NotNull IConfigurableJavaPlugin plugin, @NotNull ConfigFile... files) {
+        this(plugin, plugin.getName() + " ", files);
     }
 
-    protected ConfigValidator(@NotNull IConfigurableJavaPlugin _rootInstance, @NotNull ConfigFile... files) {
-        this(_rootInstance, _rootInstance.getName() + " ", files);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // public members
-    ///////////////////////////////////////////////////////////////////////////
-    public synchronized boolean load() {
-        if (!_rootInstance.getDataFolder().exists())
-            status = _rootInstance.getDataFolder().mkdir();
+    public synchronized boolean load() throws IOException {
+        if (!plugin.getDataFolder().exists() && !plugin.getDataFolder().mkdir())
+            throw new IOException("could not create directory in plugins/" + plugin.getName());
 
         if (configFiles == null || configFiles.size() == 0)
             return true;
 
         for (ConfigFile configFile : configFiles.values()) {
             if (!configFile.exists()) {
-                logger.config(configFile.getName() + " not exists!");
+                logger.fine(configFile.getName() + " does not exists!");
 
-                String path = getFilePathFromConfig(configFile);
-                if (_rootInstance.getResource(path) == null)
+                String path = ConfigUtils.getFilePathFromConfig(configFile, plugin.getName());
+                if (plugin.getResource(path) == null)
                     throw new IllegalArgumentException("file " + path + " does not exists in plugin's jar file");
 
-                _rootInstance.saveResource(path, false);
-                if (!configFile.exists()) {
-                    status = false;
+                plugin.saveResource(path, false);
+
+                if (!configFile.exists())
                     throw new RuntimeException("could not create file " + configFile.getPath());
-                }
             } else
-                System.out.println(configFile.getName() + " exists!");
+                logger.fine(configFile.getName() + " exists!");
 
-            YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
-            for (Map.Entry<Object, ConfigEntry<Integer>> entry : configFile.getEntries().getIntegers().entrySet())
-                try {
-                    validateEntry(configFile, entry.getValue(), yml);
-                } catch (IOException e) {
-                    logger.warning("IOException (problem with deleting/renaming file) " + configFile.getAbsolutePath());
-                }
-
-            for (Map.Entry<Object, ConfigEntry<Boolean>> entry : configFile.getEntries().getBooleans().entrySet())
-                try {
-                    validateEntry(configFile, entry.getValue(), yml);
-                } catch (IOException e) {
-                    logger.warning("IOException (problem with deleting/renaming file) " + configFile.getAbsolutePath());
-                }
-
-            for (Map.Entry<Object, ConfigEntry<String>> entry : configFile.getEntries().getStrings().entrySet())
-                try {
-                    validateEntry(configFile, entry.getValue(), yml);
-                } catch (IOException e) {
-                    logger.warning("IOException (problem with deleting/renaming file) " + configFile.getAbsolutePath());
-                }
-
-            for (Map.Entry<Object, ConfigEntry<Object>> entry : configFile.getEntries().getObjects().entrySet())
-                try {
-                    validateEntry(configFile, entry.getValue(), yml);
-                } catch (IOException e) {
-                    logger.warning("IOException (problem with deleting/renaming file) " + configFile.getAbsolutePath());
-                }
+            validateFile(configFile);
         }
 
-        return status;
-    }
-
-    /**
-     * Resolves absolute path of given configFile to the relative one.
-     *
-     * @param configFile Config file to which path should be returned.
-     * @return Relative path to the yml file.
-     */
-    public static String getFilePathFromConfig(File configFile) {
-        System.out.println("getFilePathFromConfig input: " + configFile.getPath());
-        Matcher matcher = pathPattern.matcher(configFile.getPath());
-        if (!matcher.find())
-            throw new IllegalArgumentException("could not calculate path to the file");
-        return matcher.group(2);
+        return true;
     }
 
     /**
@@ -163,79 +89,37 @@ public abstract class ConfigValidator {
         if (!oldFile.renameTo(prevOldFile))
             throw new IOException("cannot rename file to " + oldFile.getName());
 
-        _rootInstance.saveResource(getFilePathFromConfig(configFile), false);
+        _rootInstance.saveResource(ConfigUtils.getFilePathFromConfig(configFile, _rootInstance.getName()), false);
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // protected members
-    ///////////////////////////////////////////////////////////////////////////
+    public void validateFile(@NotNull ConfigFile configFile) {
+        YamlConfiguration yml = configFile.getYamlConfiguration();
 
-    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml) throws IOException {
-        validateEntry(parent, entry, yml, true, true);
+        validateEntries(configFile, configFile.getEntries().getBooleans().values(), yml);
+        validateEntries(configFile, configFile.getEntries().getIntegers().values(), yml);
+        validateEntries(configFile, configFile.getEntries().getStrings().values(), yml);
+        validateEntries(configFile, configFile.getEntries().getObjects().values(), yml);
     }
 
-    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml, boolean loadData, boolean revertWhenIncorrect) throws IOException {
-        boolean validate = true;
+    protected <T> void validateEntries(@NotNull ConfigFile configFile, @NotNull Collection<ConfigEntry<T>> entrySet, @NotNull YamlConfiguration yml) {
+        for (ConfigEntry<T> entry : entrySet)
+            try {
+                validateEntry(configFile, entry, yml, true);
+            } catch (IOException e) {
+                logger.warning("IOException (problem with deleting/renaming file) - " + configFile.getAbsolutePath());
+            }
+    }
+
+    protected <T> void validateEntry(@NotNull ConfigFile parent, @NotNull ConfigEntry<T> entry, YamlConfiguration yml, boolean revertWhenIncorrect) throws IOException {
         if (!entry.validate(yml)) {
-            validate = false;
-            printError(entry.getName(), ErrorCode.WRONG_VALUE);
+            logger.severe("Value of " + entry.getName() + " in " + ConfigUtils.getFilePathFromConfig(parent, plugin.getName()) + " is wrong.");
 
             if (revertWhenIncorrect) {
-                revertOriginal(parent, _rootInstance);
+                revertOriginal(parent, plugin);
                 yml = YamlConfiguration.loadConfiguration(parent);
             }
         }
 
-        if (loadData && validate)
-            entry.setValue((T) yml.get(entry.getName()));
-    }
-
-    protected void printError(@NotNull String value, @NotNull ErrorCode code) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(value.replaceFirst("(.)", "$1".toUpperCase())).append(" ");
-
-        switch (code) {
-            case NOT_EXISTED:
-                sb.append("hadn't existed, but was auto-created");
-                break;
-            case NOT_EXIST:
-                sb.append("does not exist");
-                break;
-            case NOT_SET:
-                sb.append("is not set");
-                break;
-            case WRONG_VALUE:
-                sb.append("is wrong");
-                break;
-            case FILE_CREATION_ERROR:
-                sb.append("couldn't create file");
-                break;
-            default:
-                sb.append("error message not set");
-                break;
-        }
-
-        String message = "§4[" + this.prefix + "ERROR " + code.getError() + "] §c" + sb.toString();
-        if (code.getError() > 0)
-            message = "§9[" + this.prefix + "INFO " + code.getError() + "] §b" + sb.toString();
-
-        Bukkit.getConsoleSender().sendMessage(message);
-    }
-
-    protected enum ErrorCode {
-        NOT_EXISTED(1),
-        NOT_EXIST(-1),
-        NOT_SET(-2),
-        WRONG_VALUE(-3),
-        FILE_CREATION_ERROR(-4);
-
-        private int error;
-        ErrorCode(int code) {
-            this.error = code;
-        }
-
-        public int getError() {
-            return error;
-        }
+        entry.setValue((T) yml.get(entry.getName()));
     }
 }

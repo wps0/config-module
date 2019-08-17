@@ -1,6 +1,7 @@
 package pl.wieczorekp.configmodule.config;
 
 import lombok.Getter;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -14,28 +15,30 @@ public class ConfigFile extends File {
     @Getter private boolean isMessageFile;
     @Getter private ConfigEntryHashMap entries;
 
-
     public ConfigFile(File parent, String path, ConfigEntryHashMap entries) {
         super(parent, path);
         this.entries = entries;
         this.lastReload = -1;
         this.isMessageFile = false;
     }
-
     public ConfigFile(File parent, @NotNull String child, ConfigEntryHashMap entries, boolean isMessageFile) {
         this(parent, child, entries);
         this.isMessageFile = isMessageFile;
     }
-
+    ///////////////////////////////////////////////////////////////////////////
+    // Reload-related
+    ///////////////////////////////////////////////////////////////////////////
     public boolean canReload() {
         return System.currentTimeMillis() - lastReload > reloadTolerance;
     }
-
     public void updateLastReload() {
         updateLastReload(System.currentTimeMillis());
     }
-
     public void updateLastReload(long lastReload) {
         this.lastReload = lastReload;
+    }
+
+    public YamlConfiguration getYamlConfiguration() {
+        return YamlConfiguration.loadConfiguration(this);
     }
 }

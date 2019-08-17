@@ -7,18 +7,17 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import pl.wieczorekp.configmodule.IConfigurableJavaPlugin;
-import pl.wieczorekp.configmodule.Language;
-import pl.wieczorekp.configmodule.ReplaceEntry;
+import pl.wieczorekp.configmodule.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 
 // ToDo: chyba że jakoś annotations dodawać tam, gdzie problem jest z czmyś do rozwiązania w normalny sposób, np. przy tych typach w config entry
 //      czy coś
+
+// ToDo: zrobic config i wywalic opcje disableLiveReload: ["pluginName"]
 
 public class Config extends ConfigValidator {
     private final FilesystemWatcher fsWatcher;
@@ -29,28 +28,26 @@ public class Config extends ConfigValidator {
 
     // ToDo: add databaseUsed variable or sth
     // ToDo: tworzenie pustych directory
-    public Config(@NotNull String packageName, @NotNull ConfigFile... configFiles) throws IOException {
-        this(true, packageName, configFiles);
-    }
-
     public Config(boolean usePrefix, @NotNull IConfigurableJavaPlugin mainPluginClass, @NotNull ConfigFile... configFiles) throws IOException {
         super(mainPluginClass, configFiles);
         this.usePrefix = usePrefix;
         this.language = Language.ENGLISH;
-        this.fsWatcher = new FilesystemWatcher(_rootInstance);
+        this.fsWatcher = new FilesystemWatcher(plugin);
         this.watcherThread = new Thread(this.fsWatcher);
-    }
-
-    @Deprecated
-    public Config(boolean usePrefix, @NotNull String packageName, @NotNull ConfigFile... configFiles) throws IOException {
-        this(usePrefix, IConfigurableJavaPlugin.getInstance(packageName), configFiles);
     }
 
     @Override
     public boolean load() {
         logger.info("Loading config...");
-        if (!super.load())
+        try {
+            if (!super.load())
+                return false;
+        } catch (IOException e) {
+            logger.fine("IO Exception!");
+            logger.fine("Message: " + e.getMessage());
+            logger.finer("Stack trace: " + Arrays.toString(e.getStackTrace()));
             return false;
+        }
 
         String lang = getValue("language");
         if (lang != null)
@@ -61,8 +58,8 @@ public class Config extends ConfigValidator {
 
         try {
             Thread.sleep(500);
-            fsWatcher.init(_rootInstance.getDataFolder().toPath());
-            watcherThread.setName(_rootInstance.getName().replaceAll("\\s", "") + "-ConfigWatcher");
+            fsWatcher.init(plugin.getDataFolder().toPath());
+            watcherThread.setName(plugin.getName().replaceAll("\\s", "") + "-ConfigWatcher");
             watcherThread.start();
         } catch (IOException | InterruptedException e) {
             // ToDo: zmienic sposob wyswietlania wiadomosci!!
@@ -103,7 +100,7 @@ public class Config extends ConfigValidator {
     }
 
     public void reload(@NotNull ConfigFile configFile) {
-        _rootInstance.getLogger().info("Reloading file " + configFile.getPath() + "...");
+        plugin.getLogger().info("Reloading file " + configFile.getPath() + "...");
         if (!configFile.canReload())
             throw new IllegalStateException("cannot reload file as it was reloaded not long ago");
 
@@ -111,7 +108,7 @@ public class Config extends ConfigValidator {
             YamlConfiguration yml = YamlConfiguration.loadConfiguration(configFile);
             for (ConfigEntry<?> entry : (Set<ConfigEntry<?>>) configFile.getEntries().values()) {
                 try {
-                    validateEntry(configFile, entry, yml, true, false);
+                    validateEntry(configFile, entry, yml, false);
                 } catch (IOException e) {
                     logger.warning("Wrong value for " + entry.getName() + ". Cannot delete/rename file.");
                 }

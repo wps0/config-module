@@ -2,7 +2,7 @@ package pl.wieczorekp.configmodule;
 
 import org.bukkit.command.CommandSender;
 
-import java.util.Map;
+import java.util.AbstractMap;
 
 /**
  * Map.Entry, but key and value are Strings.
@@ -13,10 +13,8 @@ import java.util.Map;
  * @see java.util.Map.Entry
  * @see pl.wieczorekp.configmodule.config.Config
  */
-public class ReplaceEntry implements Map.Entry {
-    private String key;
-    private String value;
-
+@Deprecated
+public class ReplaceEntry extends AbstractMap.SimpleEntry<String, String> {
     /**
      * Default constructor.
      *
@@ -24,26 +22,6 @@ public class ReplaceEntry implements Map.Entry {
      * @param value Value
      */
     public ReplaceEntry(String key, String value) {
-        this.key = key;
-        this.value = value;
-    }
-
-    @Override
-    public String getKey() {
-        return this.key;
-    }
-
-    @Override
-    public String getValue() {
-        return this.value;
-    }
-
-    @Override
-    public String setValue(Object value) {
-        if (value instanceof String) {
-            this.value = (String) value;
-            return this.value;
-        }
-        return null;
+        super(key, value);
     }
 }
