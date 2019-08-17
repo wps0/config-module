@@ -69,7 +69,7 @@ public class FilesystemWatcher implements Runnable {
                 Path path = (Path) watchEvent.context();
                 if (watchEvent.kind() == ENTRY_MODIFY)
                     try {
-                        instance.getConfigService().reload(directory, path);
+                        instance.getConfigInstance().reload(directory, path);
                     } catch (IllegalArgumentException | NullPointerException | IOException e) {
                         instance.getLogger().warning("Could not reload! Exception message: " + e.getMessage());
                     } catch (IllegalStateException e) {

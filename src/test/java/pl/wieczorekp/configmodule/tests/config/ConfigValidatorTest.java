@@ -3,20 +3,16 @@ package pl.wieczorekp.configmodule.tests.config;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Before;
 import org.junit.Test;
-import pl.wieczorekp.configmodule.*;
-import pl.wieczorekp.configmodule.config.Config;
-import pl.wieczorekp.configmodule.config.ConfigEntry;
-import pl.wieczorekp.configmodule.config.ConfigFile;
-import pl.wieczorekp.configmodule.config.ConfigValidator;
+import pl.wieczorekp.configmodule.IConfigurableJavaPlugin;
+import pl.wieczorekp.configmodule.config.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.regex.Pattern;
 
 import static java.io.File.separatorChar;
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
 public class ConfigValidatorTest {
@@ -69,7 +65,7 @@ public class ConfigValidatorTest {
 
         ConfigFile configFile = mock(ConfigFile.class);
         YamlConfiguration yml = mock(YamlConfiguration.class);
-        ConfigValidator cv = new Config("pl.wieczorekp", configFile);
+        ConfigValidator cv = new Config(true, mockICJP, configFile);
         ConfigEntry<String> configEntry = new ConfigEntry<>("stringTest", "stringValue", () -> ".");
 
         Method method = cv.getClass().getDeclaredMethod("validateEntry",configFile.getClass(), configEntry.getClass(), yml.getClass(), boolean.class);
@@ -84,23 +80,6 @@ public class ConfigValidatorTest {
     @Test
     public void printError() {
         fail("This test has yet to be implemented.");
-    }
-
-    @Test
-    public void getFilePathFromConfig_slash() {
-        ConfigValidator.setPathPattern(Pattern.compile("ConfigValidatorTest([/\\\\])(.+)"));
-        ConfigFile configFile = mock(ConfigFile.class);
-        when(configFile.getPath()).thenReturn("ConfigValidatorTest/cfg/config.yml");
-
-        assertEquals("should convert slashed absolute path to the file to the relative path", "cfg/config.yml", ConfigValidator.getFilePathFromConfig(configFile));
-    }
-    @Test
-    public void getFilePathFromConfig_backslash() {
-        ConfigValidator.setPathPattern(Pattern.compile("ConfigValidatorTest([/\\\\])(.+)"));
-        ConfigFile configFile = mock(ConfigFile.class);
-        when(configFile.getPath()).thenReturn("ConfigValidatorTest\\cfg\\config.yml");
-
-        assertEquals("should convert back slashed absolute path to the file to the relative path", "cfg\\config.yml", ConfigValidator.getFilePathFromConfig(configFile));
     }
 
     @Test
@@ -132,13 +111,5 @@ public class ConfigValidatorTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @Test
-    public void setPathPattern() {
-        assertNull("at the beginning, pathPattern should be null", ConfigValidator.getPathPattern());
-        ConfigValidator.setPathPattern(Pattern.compile("([/\\\\])(.+)"));
-
-        assertEquals("pathPattern should be set to previously specified value", "([/\\\\])(.+)", ConfigValidator.getPathPattern().toString());
     }
 }
