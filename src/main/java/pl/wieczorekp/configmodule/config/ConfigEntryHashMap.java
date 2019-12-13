@@ -83,6 +83,10 @@ public class ConfigEntryHashMap implements Map {
         return prevValue;*/
     }
 
+    public ConfigEntry<String> put(String key, ConfigEntry<String> value) {
+        return strings.put(key, value);
+    }
+
     @Override
     public Object remove(Object key) {
         throw new UnsupportedOperationException("remove operation is not supported");

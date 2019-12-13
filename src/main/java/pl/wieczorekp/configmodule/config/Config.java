@@ -82,6 +82,10 @@ public class Config extends ConfigValidator {
         }*/
     }
 
+    public void loadMessages(Language language, String[] ids) {
+        loadValues((ConfigFile[]) messageFiles.toArray(), ids, language.getId());
+    }
+
     public void reload(@NotNull Path parent, @NotNull Path child) throws FileNotFoundException {
         ConfigFile found = null;
         Path filePath = parent.resolve(child).toAbsolutePath();

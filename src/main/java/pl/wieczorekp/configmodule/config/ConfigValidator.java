@@ -44,6 +44,39 @@ public abstract class ConfigValidator {
         this(plugin, plugin.getName() + " ", files);
     }
 
+    protected void loadValues(ConfigFile[] files, String[] ids, String idPrefix) {
+
+        for (ConfigFile file : files) {
+            if (!file.exists()) {
+                logger.fine(file.getName() + " does not exists!");
+
+                String path = ConfigUtils.getFilePathFromConfig(file, plugin.getName());
+                if (plugin.getResource(path) == null)
+                    throw new IllegalArgumentException("file " + path + " does not exists in plugin's jar file");
+
+                plugin.saveResource(path, false);
+
+                if (!file.exists())
+                    throw new RuntimeException("could not create file " + file.getPath());
+            } else
+                logger.fine(file.getName() + " exists!");
+
+            YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
+
+            for (String id : ids) {
+                String configValue = (String) yml.get(idPrefix + id);
+
+                if (configValue != null) {
+                    file.getEntries().put(id, new ConfigEntry<>(id, configValue, String::new));
+                }
+            }
+        }
+    }
+
+    private void loadValues(ConfigFile[] files) {
+        loadValues(files, null, "");
+    }
+
     public synchronized boolean load() throws IOException {
         if (!plugin.getDataFolder().exists() && !plugin.getDataFolder().mkdir())
             throw new IOException("could not create directory in plugins/" + plugin.getName());
@@ -51,23 +84,7 @@ public abstract class ConfigValidator {
         if (configFiles == null || configFiles.size() == 0)
             return true;
 
-        for (ConfigFile configFile : configFiles.values()) {
-            if (!configFile.exists()) {
-                logger.fine(configFile.getName() + " does not exists!");
-
-                String path = ConfigUtils.getFilePathFromConfig(configFile, plugin.getName());
-                if (plugin.getResource(path) == null)
-                    throw new IllegalArgumentException("file " + path + " does not exists in plugin's jar file");
-
-                plugin.saveResource(path, false);
-
-                if (!configFile.exists())
-                    throw new RuntimeException("could not create file " + configFile.getPath());
-            } else
-                logger.fine(configFile.getName() + " exists!");
-
-            validateFile(configFile);
-        }
+        loadValues((ConfigFile[]) configFiles.values().toArray());
 
         return true;
     }
