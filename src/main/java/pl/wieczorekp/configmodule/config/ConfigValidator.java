@@ -3,6 +3,7 @@ package pl.wieczorekp.configmodule.config;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import pl.wieczorekp.configmodule.IConfigurableJavaPlugin;
+import pl.wieczorekp.configmodule.config.filesystem.ConfigFile;
 import pl.wieczorekp.configmodule.utils.ConfigUtils;
 
 import java.io.File;
@@ -61,6 +62,9 @@ public abstract class ConfigValidator {
             } else
                 logger.fine(file.getName() + " exists!");
 
+            if (ids == null)
+                return;
+
             YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
 
             for (String id : ids) {
@@ -84,7 +88,7 @@ public abstract class ConfigValidator {
         if (configFiles == null || configFiles.size() == 0)
             return true;
 
-        loadValues((ConfigFile[]) configFiles.values().toArray());
+        loadValues(ConfigFile.toArray(configFiles.values()));
 
         return true;
     }

@@ -5,6 +5,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.wieczorekp.configmodule.Language;
+import pl.wieczorekp.configmodule.config.filesystem.FilesystemWatcher;
 
 import java.util.Map;
 import java.util.function.Supplier;

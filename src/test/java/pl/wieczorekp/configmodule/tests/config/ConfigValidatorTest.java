@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import pl.wieczorekp.configmodule.IConfigurableJavaPlugin;
 import pl.wieczorekp.configmodule.config.*;
+import pl.wieczorekp.configmodule.config.filesystem.ConfigFile;
 
 import java.io.File;
 import java.io.IOException;

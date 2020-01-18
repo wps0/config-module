@@ -1,4 +1,4 @@
-package pl.wieczorekp.configmodule.config;
+package pl.wieczorekp.configmodule.config.filesystem;
 
 import org.jetbrains.annotations.NotNull;
 import pl.wieczorekp.configmodule.IConfigurableJavaPlugin;

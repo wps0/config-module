@@ -3,7 +3,7 @@ package pl.wieczorekp.configmodule.tests.config;
 import org.junit.Before;
 import org.junit.Test;
 import pl.wieczorekp.configmodule.config.ConfigEntryHashMap;
-import pl.wieczorekp.configmodule.config.ConfigFile;
+import pl.wieczorekp.configmodule.config.filesystem.ConfigFile;
 
 import java.io.File;
 

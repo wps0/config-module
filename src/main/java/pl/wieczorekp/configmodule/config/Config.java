@@ -8,6 +8,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import pl.wieczorekp.configmodule.*;
+import pl.wieczorekp.configmodule.config.filesystem.ConfigFile;
+import pl.wieczorekp.configmodule.config.filesystem.FilesystemWatcher;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -67,23 +69,10 @@ public class Config extends ConfigValidator {
         }
 
         return true;
-
-        /*
-        database.put("type", _config.getInt("database.type"));
-        database.put("address", _config.getString("database.address"));
-        database.put("port", _config.getString("database.port"));
-        database.put("login", _config.getString("database.login"));
-        database.put("password", _config.getString("database.password"));
-        database.put("name", _config.getString("database.name"));
-
-        if ((int) database.get("type") == 0) {
-            printError("database.type", ErrorCode.WRONG_VALUE);
-            return false;
-        }*/
     }
 
     public void loadMessages(Language language, String[] ids) {
-        loadValues((ConfigFile[]) messageFiles.toArray(), ids, language.getId());
+        loadValues(ConfigFile.toArray(messageFiles), ids, language.getId());
     }
 
     public void reload(@NotNull Path parent, @NotNull Path child) throws FileNotFoundException {
@@ -142,8 +131,10 @@ public class Config extends ConfigValidator {
     private <T> T get(@NotNull String key, @NotNull Collection<ConfigFile> files) {
         for (ConfigFile cf : files) {
             ConfigEntry<T> entry;
-            if ((entry = cf.getEntries().get(key)) != null)
-                return entry.getValue();
+            if ((entry = cf.getEntries().get(key)) != null) {
+                T result = entry.getValue();
+                return result != null ? ;
+            }
         }
         return null;
     }
